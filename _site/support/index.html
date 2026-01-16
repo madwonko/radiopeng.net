@@ -15,8 +15,20 @@
 <body>
   <div class="page">
 
-    <!-- TOP HEADER (logo moved out; header is nav only) -->
+    <!-- TOP HEADER -->
     <header class="topbar">
+      <div class="brand">
+        <div class="brandrow">
+          <a href="/" class="logo-link" aria-label="RadioPeng home">
+            <img src="/assets/radiopeng-logo.png" alt="RadioPeng" class="site-logo" />
+          </a>
+
+          <div class="eq" aria-hidden="true" title="signal">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+
       <nav class="topnav">
         <a class="pill" href="/">Home</a>
         <a class="pill" href="/articles/">Articles</a>
@@ -26,21 +38,12 @@
     </header>
 
     <!-- PORTAL LAYOUT -->
+
     <div class="portal">
+	
 
       <!-- SIDEBAR -->
       <aside class="sidebar">
-
-        <!-- SIDEBAR LOGO (moved here) -->
-        <div class="sidebar-brand">
-          <a href="/" class="logo-link sidebar-logo" aria-label="RadioPeng home">
-            <img src="/assets/radiopeng-logo.png" alt="RadioPeng" class="site-logo" />
-          </a>
-
-          <div class="eq" aria-hidden="true" title="signal">
-            <span></span><span></span><span></span><span></span><span></span>
-          </div>
-        </div>
 
         <!-- LISTEN -->
         <section class="sidebox listenbox">
@@ -65,7 +68,7 @@
           </p>
         </section>
 
-        <!-- SCHEDULE (DATA-DRIVEN)
+        <!-- SCHEDULE (DATA-DRIVEN) 
         <section class="sidebox schedulebox">
   <h3>On Air Now</h3>
 
@@ -76,13 +79,14 @@
   </a>
 </section>
  -->
+		
+		<section class="sidebox schedulebox">
+			<h3>On Air Now</h3>
+			<a href="/schedule/" class="side-link" id="openSchedule" data-no-swup>
+				Full Schedule (table)
+			</a>
 
-        <section class="sidebox schedulebox">
-          <h3>On Air Now</h3>
-          <a href="/schedule/" class="side-link" id="openSchedule" data-no-swup>
-            Full Schedule (table)
-          </a>
-        </section>
+		</section>
 
         <!-- BROWSE -->
         <section class="sidebox">
@@ -125,12 +129,11 @@
 
       <!-- MAIN CONTENT -->
       <main class="main" id="swup">
-        <div class="now-playing-ribbon">
-          <div class="ticker">
-            <span id="nowPlayingText">▶ Now Playing: loading…</span>
-          </div>
-        </div>
-
+		<div class="now-playing-ribbon">
+		  <div class="ticker">
+			<span id="nowPlayingText">▶ Now Playing: loading…</span>
+		  </div>
+		</div>
         <!-- MAIN BANNER -->
         <div class="main-banner">
           <img
@@ -304,40 +307,42 @@ and the slow accumulation of beautiful noise.
     })();
   </script>
 
+
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const link = document.getElementById("openSchedule");
-      if (!link) return;
+  document.addEventListener("DOMContentLoaded", () => {
+    const link = document.getElementById("openSchedule");
+    if (!link) return;
 
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
 
-        window.open(
-          link.href,
-          "RadioPengSchedule",
-          "width=1200,height=800,resizable=yes,scrollbars=yes"
-        );
-      });
+      window.open(
+        link.href,
+        "RadioPengSchedule",
+        "width=1200,height=800,resizable=yes,scrollbars=yes"
+      );
     });
-  </script>
+  });
+</script>
 
   <script>
-    async function updateNowPlaying() {
-      try {
-        const res = await fetch("https://a5.asurahosting.com/api/nowplaying/239");
-        const data = await res.json();
+	async function updateNowPlaying() {
+	  try {
+		const res = await fetch("https://a5.asurahosting.com/api/nowplaying/239");
+		const data = await res.json();
 
-        const np = data.now_playing.song;
-        document.getElementById("nowPlayingText").textContent =
-          `▶ Now Playing: ${np.artist} — ${np.title}`;
-      } catch (e) {
-        console.warn("Now Playing fetch failed");
-      }
-    }
+		const np = data.now_playing.song;
+		document.getElementById("nowPlayingText").textContent =
+		  `▶ Now Playing: ${np.artist} — ${np.title}`;
+	  } catch (e) {
+		console.warn("Now Playing fetch failed");
+	  }
+	}
 
-    updateNowPlaying();
-    setInterval(updateNowPlaying, 15000);
-  </script>
+	updateNowPlaying();
+	setInterval(updateNowPlaying, 15000);
+	</script>
+
 
 </body>
 </html>
