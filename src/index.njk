@@ -1,0 +1,39 @@
+---
+layout: layout-base.njk
+title: RadioPeng
+---
+
+<section class="hero">
+  <h1>Signal acquired.</h1>
+  <p>
+    RadioPeng broadcasts strange, beautiful, occasionally unwise music.
+    Press play. Drift responsibly.
+  </p>
+</section>
+
+<section class="grid">
+  <div class="card">
+    <h2>Latest Articles</h2>
+
+    <div class="article-list">
+      {% set posts = collections.articles | reverse %}
+      {% for post in posts.slice(0,5) %}
+        <a class="article" href="{{ post.url }}">
+          <div class="kicker">{{ post.date | readableDate }}</div>
+          <div class="name">{{ post.data.title }}</div>
+          {% if post.data.description %}
+            <div class="blurb">{{ post.data.description }}</div>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>The Stream</h2>
+    <p class="meta">
+      Live audio stream served via AzuraCast.<br/>
+      Minimal UI. No nonsense.
+    </p>
+  </div>
+</section>

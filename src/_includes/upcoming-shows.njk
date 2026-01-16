@@ -1,0 +1,16 @@
+<section class="up-next">
+  <div class="up-next-head">
+    <h2>Up Next</h2>
+    <a class="up-next-link" href="/shows/">Full schedule →</a>
+  </div>
+
+  <div class="up-next-list">
+    {% for s in nextshows %}
+      <div class="up-next-item">
+        <div class="up-next-time">{{ s.startISO | readableDT }}</div>
+        <div class="up-next-title">{{ s.show }}</div>
+        <div class="up-next-dj">DJ: {{ s.dj }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</section>

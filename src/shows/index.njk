@@ -1,0 +1,16 @@
+---
+layout: layout-base.njk
+title: Shows
+---
+
+<h1>Shows</h1>
+
+<div class="grid">
+  {% for s in collections.shows | sort(attribute="data.title") %}
+    <div class="card">
+      <h2><a href="{{ s.url }}">{{ s.data.title }}</a></h2>
+      {% if s.data.description %}<p class="meta">{{ s.data.description }}</p>{% endif %}
+      {% if s.data.dj %}<p class="meta">DJ: {{ s.data.dj }}</p>{% endif %}
+    </div>
+  {% endfor %}
+</div>

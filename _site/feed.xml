@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<rss version="2.0">
+  <channel>
+    <title>RadioPeng</title>
+    <link>http://80.209.241.121:8081/</link>
+    <description>eclectic transmissions from the penguin belt</description>
+    <language>en</language>
+
+    
+    <item>
+      <title>Music for Yoga</title>
+      <link>http://80.209.241.121:8081/articles/music-for-yoga/</link>
+      <guid>http://80.209.241.121:8081/articles/music-for-yoga/</guid>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 GMT</pubDate>
+      
+      <description>A thoughtful playlist of music for yoga.</description>
+      
+    </item>
+    
+    <item>
+      <title>Hello, Peng</title>
+      <link>http://80.209.241.121:8081/articles/hello-peng/</link>
+      <guid>http://80.209.241.121:8081/articles/hello-peng/</guid>
+      <pubDate>Sun, 11 Jan 2026 00:00:00 GMT</pubDate>
+      
+      <description>A tiny manifesto for weird radio and why the button matters.</description>
+      
+    </item>
+    
+  </channel>
+</rss>

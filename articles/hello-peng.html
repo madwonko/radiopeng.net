@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hello, Peng | RadioPeng</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="title">RadioPeng</div>
+        <div class="tagline">words that try to sound like music 🐧🫧</div>
+      </div>
+      <nav>
+        <a class="pill" href="../index.html">Home</a>
+        <a class="pill" href="index.html">Articles</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <h1>Hello, Peng</h1>
+      <p class="meta">Jan 2026 • Dispatch</p>
+    </section>
+
+    <article class="card" style="margin-top:18px; line-height:1.6;">
+      <p>
+        Every radio station eventually reveals its true form: a vibe with admin credentials.
+        RadioPeng is the version that keeps the weird bits turned up.
+      </p>
+      <p>
+        Press Play. Let the stream do what streams do: carry glittering debris from faraway
+        genres, occasionally washing up something rare enough to frame.
+      </p>
+      <p class="meta">
+        Next steps: add a “Now Playing” panel (if your host provides an API), tags, and search.
+      </p>
+    </article>
+  </div>
+
+  <div class="playerbar">
+    <div class="player-inner">
+      <button class="btn" id="playBtn">Play</button>
+
+      <div class="now">
+        <div class="label">Status</div>
+        <div class="value">
+          <span class="badge"><span class="dot" id="liveDot"></span><span id="liveStatus">Idle</span></span>
+        </div>
+      </div>
+
+      <div class="vol">
+        <span>Volume</span>
+        <input id="vol" type="range" min="0" max="1" step="0.01" value="0.85" />
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/player.js"></script>
+</body>
+</html>

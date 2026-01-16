@@ -1,0 +1,39 @@
+---
+permalink: /shows.xml
+eleventyExcludeFromCollections: true
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{{ site.podcastTitle }}</title>
+    <link>{{ site.url }}/shows/</link>
+    <description>{{ site.podcastDescription }}</description>
+    <language>{{ site.podcastLanguage }}</language>
+    <atom:link href="{{ site.url }}/shows.xml" rel="self" type="application/rss+xml" />
+
+    {% set eps = collections.shows | reverse %}
+    {% for ep in eps.slice(0,50) %}
+      <item>
+        <title>{{ ep.data.title | escape }}</title>
+        <link>{{ site.url }}{{ ep.url }}</link>
+        <guid>{{ site.url }}{{ ep.url }}</guid>
+        <pubDate>{{ ep.date.toUTCString() }}</pubDate>
+
+        {% if ep.data.description %}
+          <description>{{ ep.data.description | escape }}</description>
+        {% else %}
+          <description>{{ (ep.data.show or "RadioPeng") | escape }}{% if ep.data.dj %} — DJ: {{ ep.data.dj | escape }}{% endif %}</description>
+        {% endif %}
+
+        {% if ep.data.audio_file %}
+          <enclosure
+            url="{{ site.audioBaseUrl }}/{{ ep.data.audio_file }}"
+            type="audio/mpeg"
+            length="{{ ep.data.audio_length or 0 }}"
+          />
+        {% endif %}
+      </item>
+    {% endfor %}
+  </channel>
+</rss>

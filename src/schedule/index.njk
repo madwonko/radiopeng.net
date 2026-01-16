@@ -1,0 +1,151 @@
+---
+layout: layout-schedule.njk
+title: Full Schedule
+---
+
+<section class="schedulePage">
+  <h1>Full Schedule</h1>
+
+  <div class="scheduleTools">
+    <input id="schedSearch" type="search" placeholder="Search DJ, show, day…" />
+  </div>
+
+  <div class="scheduleTableWrap">
+    <table class="scheduleTable" id="scheduleTable">
+      <thead>
+        <tr>
+          <th data-sort="day">Day</th>
+          <th data-sort="time">Time</th>
+          <th data-sort="dj">DJ</th>
+          <th data-sort="show">Show</th>
+          <th data-sort="desc">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in schedule %}
+          <tr
+            data-day="{{ e.days }}"
+            data-start="{{ e.start }}"
+            data-end="{{ e.end }}"
+            data-dj="{{ e.dj }}"
+            data-show="{{ e.show }}"
+            data-slug="{{ e.showSlug }}"
+          >
+            <td class="mono">{{ e.days }}</td>
+            <td class="mono" data-time="{{ e.start }}-{{ e.end }}">{{ e.start }}–{{ e.end }}</td>
+            <td>{{ e.dj or "—" }}</td>
+            <td>
+              {# If you have /shows/<slug>/ pages, link them #}
+              {% if e.showSlug %}
+                <a href="/shows/{{ e.showSlug }}/" target="_blank" rel="noopener">{{ e.show }}</a>
+              {% else %}
+                {{ e.show or "—" }}
+              {% endif %}
+            </td>
+            <td class="desc" data-desc="">
+              <span class="descText">—</span>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p class="meta" style="margin-top: 12px;">
+    Click column headers to sort. Search filters instantly.
+  </p>
+</section>
+
+<script>
+(() => {
+  const table = document.getElementById("scheduleTable");
+  const search = document.getElementById("schedSearch");
+  if (!table) return;
+
+  const tbody = table.querySelector("tbody");
+  let rows = Array.from(tbody.querySelectorAll("tr"));
+
+  // Optional: show descriptions if you provide them in a global window.SHOW_DESCRIPTIONS map
+  // Example: window.SHOW_DESCRIPTIONS = { "madwonko": "Brief description here" }
+  const descMap = (window.SHOW_DESCRIPTIONS && typeof window.SHOW_DESCRIPTIONS === "object")
+    ? window.SHOW_DESCRIPTIONS
+    : null;
+
+  if (descMap) {
+    rows.forEach(r => {
+      const slug = r.getAttribute("data-slug") || "";
+      const td = r.querySelector("td.desc");
+      const span = r.querySelector(".descText");
+      const d = (descMap[slug] || "").trim();
+      if (td && span) {
+        td.setAttribute("data-desc", d);
+        span.textContent = d || "—";
+      }
+    });
+  }
+
+  // Search filter
+  if (search) {
+    search.addEventListener("input", () => {
+      const q = search.value.trim().toLowerCase();
+      rows.forEach(r => {
+        const txt = r.textContent.toLowerCase();
+        r.style.display = txt.includes(q) ? "" : "none";
+      });
+    });
+  }
+
+  // Sorting helpers
+  const dayOrder = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+  const parseTime = (t) => {
+    // handles "24:00" too
+    const m = /^(\d{1,2}):(\d{2})$/.exec((t || "").trim());
+    if (!m) return 9999;
+    let hh = parseInt(m[1], 10);
+    const mm = parseInt(m[2], 10);
+    // treat 24:00 as 24*60
+    if (hh === 24) hh = 24;
+    return hh * 60 + mm;
+  };
+
+  const getKey = (row, key) => {
+    const day = row.getAttribute("data-day") || "";
+    const start = row.getAttribute("data-start") || "";
+    const end = row.getAttribute("data-end") || "";
+    const dj = row.getAttribute("data-dj") || "";
+    const show = row.getAttribute("data-show") || "";
+    const desc = (row.querySelector("td.desc")?.getAttribute("data-desc") || "");
+
+    if (key === "day") return dayOrder[day] ?? 99;
+    if (key === "time") return parseTime(start) * 10000 + parseTime(end);
+    if (key === "dj") return dj.toLowerCase();
+    if (key === "show") return show.toLowerCase();
+    if (key === "desc") return desc.toLowerCase();
+    return "";
+  };
+
+  let sortDir = 1;
+  let lastKey = null;
+
+  table.querySelectorAll("th[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.getAttribute("data-sort");
+      if (!key) return;
+
+      sortDir = (lastKey === key) ? -sortDir : 1;
+      lastKey = key;
+
+      rows.sort((a, b) => {
+        const av = getKey(a, key);
+        const bv = getKey(b, key);
+        if (av > bv) return sortDir;
+        if (av < bv) return -sortDir;
+        return 0;
+      });
+
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+})();
+</script>

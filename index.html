@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RadioPeng</title>
+
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="title">RadioPeng</div>
+        <div class="tagline">eclectic transmissions from the penguin belt 🐧📡</div>
+      </div>
+      <nav>
+        <a class="pill" href="index.html">Home</a>
+        <a class="pill" href="articles/index.html">Articles</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <h1>Signal acquired.</h1>
+      <p>
+        RadioPeng broadcasts strange, beautiful, occasionally unwise music.
+        Press play. Drift responsibly.
+      </p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Latest Article</h2>
+        <a class="article" href="articles/hello-peng.html">
+          <div class="kicker">Jan 2026 • Dispatch</div>
+          <div class="name">Hello, Peng</div>
+          <div class="blurb">
+            A tiny manifesto for weird radio and why the button matters.
+          </div>
+        </a>
+      </div>
+
+      <div class="card">
+        <h2>The Stream</h2>
+        <p class="meta">
+          Live audio stream served via AzuraCast.<br>
+          Minimal UI. No popups. No nonsense.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- PLAYER BAR -->
+  <div class="playerbar">
+    <div class="player-inner">
+
+      <button class="btn" id="playBtn">Play</button>
+
+      <div class="now">
+        <div class="label">Now Playing</div>
+        <div class="value" id="npText">Loading…</div>
+
+        <div class="meta" style="margin-top:6px;">
+          <span class="badge">
+            <span class="dot" id="liveDot"></span>
+            <span id="liveStatus">Idle</span>
+          </span>
+          <span style="margin-left:10px;" id="listenerText">Listeners: –</span>
+        </div>
+      </div>
+
+      <div class="vol">
+        <span>Volume</span>
+        <input
+          id="vol"
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value="0.85"
+        />
+      </div>
+
+    </div>
+  </div>
+
+  <script src="assets/player.js"></script>
+</body>
+</html>

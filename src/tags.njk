@@ -1,0 +1,21 @@
+---
+layout: layout-base.njk
+title: Tags
+permalink: /tags/index.html
+---
+
+<section class="hero">
+  <h1>Tags</h1>
+  <p>Organized chaos. Mostly organized.</p>
+</section>
+
+<section class="card" style="margin-top:18px;">
+  <div class="article-list">
+    {% for tag in collections.tagList %}
+      <a class="article" href="/tags/{{ tag | url }}/">
+        <div class="name">{{ tag }}</div>
+        <div class="blurb">Browse posts tagged “{{ tag }}”.</div>
+      </a>
+    {% endfor %}
+  </div>
+</section>

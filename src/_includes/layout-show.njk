@@ -1,0 +1,29 @@
+<section class="hero">
+  <h1>{{ title }}</h1>
+  <p class="meta">
+    {% if date %}{{ date | readableDate }}{% endif %}
+    {% if dj %} • DJ: {{ dj }}{% endif %}
+    {% if show %} • Show: {{ show }}{% endif %}
+    {% if duration %} • {{ duration }}{% endif %}
+  </p>
+</section>
+
+<section class="card">
+  {% if audio_file %}
+    <audio controls preload="none" style="width:100%;">
+      <source src="{{ site.audioBaseUrl }}/{{ audio_file }}" type="audio/mpeg" />
+      Your browser does not support audio.
+    </audio>
+    <p class="meta" style="margin-top:10px;">
+      <a href="{{ site.audioBaseUrl }}/{{ audio_file }}">Download MP3</a>
+    </p>
+  {% else %}
+    <p class="meta">No audio file linked yet.</p>
+  {% endif %}
+</section>
+
+{% if content %}
+  <section class="card" style="margin-top:18px;">
+    {{ content | safe }}
+  </section>
+{% endif %}

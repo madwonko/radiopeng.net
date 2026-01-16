@@ -1,0 +1,34 @@
+---
+layout: layout-base.njk
+---
+
+<article class="card">
+  <h1>{{ title }}</h1>
+
+  {% if description %}<p class="meta">{{ description }}</p>{% endif %}
+  {% if dj %}<p class="meta">DJ: {{ dj }}</p>{% endif %}
+
+  <div class="content">
+    {{ content | safe }}
+  </div>
+</article>
+
+<section class="card" style="margin-top:14px;">
+  <h2>Past shows</h2>
+
+  {% set eps = (episodes | default([])) | filterByShow(showSlug) %}
+
+  {% if eps.length %}
+    <div class="article-list">
+      {% for e in eps.slice(0, 25) %}
+        <a class="article" href="{{ e.link }}" target="_blank" rel="noopener">
+          <div class="kicker">{{ e.pubDate }}</div>
+          <div class="name">{{ e.title }}</div>
+          {% if e.duration %}<div class="blurb">{{ e.duration }}</div>{% endif %}
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="meta">No archived episodes found yet.</p>
+  {% endif %}
+</section>

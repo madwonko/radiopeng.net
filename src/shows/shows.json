@@ -1,0 +1,5 @@
+{
+  "layout": "layout-show.njk",
+  "permalink": "/shows/{{ page.fileSlug }}/index.html",
+  "tags": ["shows"]
+}

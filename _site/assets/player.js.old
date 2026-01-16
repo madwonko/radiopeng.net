@@ -1,0 +1,291 @@
+/* RadioPeng player.js
+   - Plays stream https://a5.asurahosting.com:7780/radio.mp3
+   - Polls AzuraCast nowplaying https://a5.asurahosting.com/api/nowplaying/max
+   - Updates UI where elements exist (main page + popup player + swup navigation)
+*/
+
+(() => {
+  "use strict";
+
+  // ---- Config --------------------------------------------------------------
+  const STREAM_URL = "https://a5.asurahosting.com:7780/radio.mp3";
+  const NOWPLAYING_URL = "https://a5.asurahosting.com/api/nowplaying/max";
+  const POLL_MS = 15000;
+  const FALLBACK_ART = "/assets/cover-fallback.png";
+  const LS_VOL_KEY = "radiopeng_volume_v1";
+
+  // ---- Audio singleton (keeps playing across page navigations) -------------
+  function getAudio() {
+    if (!window.__radiopengAudio) {
+      const a = new Audio(STREAM_URL);
+      a.preload = "none";
+      a.crossOrigin = "anonymous";
+      window.__radiopengAudio = a;
+    } else {
+      // If stream URL changed in code, keep it in sync.
+      if (window.__radiopengAudio.src !== STREAM_URL) {
+        window.__radiopengAudio.src = STREAM_URL;
+      }
+    }
+    return window.__radiopengAudio;
+  }
+
+  const audio = getAudio();
+
+  // ---- Helpers -------------------------------------------------------------
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function setPlayingClass(isPlaying) {
+    document.body.classList.toggle("is-playing", !!isPlaying);
+  }
+
+  function setLiveClass(isLive) {
+    document.body.classList.toggle("is-live", !!isLive);
+  }
+
+  function safeText(el, text) {
+    if (!el) return;
+    el.textContent = text ?? "";
+  }
+
+  function setButtonPlaying(isPlaying) {
+    const playBtn = $("playBtn");
+    if (!playBtn) return;
+    playBtn.textContent = isPlaying ? "Pause" : "Play";
+    playBtn.setAttribute("aria-pressed", isPlaying ? "true" : "false");
+    setPlayingClass(isPlaying);
+  }
+
+  function setLiveUI(isLive) {
+    const liveStatus = $("liveStatus");
+    const liveDot = $("liveDot");
+    if (liveStatus) liveStatus.textContent = isLive ? "LIVE" : "Idle";
+    if (liveDot) liveDot.classList.toggle("on", !!isLive);
+    setLiveClass(isLive);
+  }
+
+  function setListenersUI(np) {
+    const el = $("listenerText");
+    if (!el) return;
+
+    const current =
+      np?.listeners?.current ??
+      np?.listeners?.total ??
+      np?.station?.mounts?.[0]?.listeners?.current ??
+      np?.station?.mounts?.[0]?.listeners?.total;
+
+    el.textContent = Number.isFinite(current) ? `Listeners: ${current}` : "Listeners: –";
+  }
+
+  function setNowPlayingUI(np) {
+    const song = np?.now_playing?.song;
+    const text =
+      (song?.artist && song?.title)
+        ? `${song.artist} — ${song.title}`
+        : (song?.text || np?.now_playing?.text || "—");
+
+    safeText($("npText"), text);
+
+    // Sidebar "Now Playing" (if present)
+    safeText($("npTextSide"), text);
+
+    // Album art (main + popup)
+    const artImg = $("artImg");
+    if (artImg) {
+      const art = song?.art || np?.now_playing?.song?.art;
+      const nextSrc = art || FALLBACK_ART;
+      if (artImg.getAttribute("src") !== nextSrc) {
+        artImg.src = nextSrc;
+      }
+      if (!artImg.__rpBound) {
+        artImg.onerror = () => { artImg.src = FALLBACK_ART; };
+        artImg.__rpBound = true;
+      }
+    }
+
+    // Optional: set document title while playing (nice in popup)
+    // Keep it subtle: only update when audio is playing.
+    if (!audio.paused) {
+      document.title = `${text} | RadioPeng`;
+    }
+  }
+
+  function setOnAirNow(np) {
+    const el = $("onAirText");
+    if (!el) return;
+
+    const isLive = !!np?.live?.is_live;
+    const dj = (np?.live?.streamer_name || "").trim();
+
+    if (isLive) {
+      el.innerHTML = dj ? `<strong>LIVE</strong> — ${escapeHtml(dj)}` : `<strong>LIVE</strong> broadcast`;
+      return;
+    }
+
+    // AutoDJ mode: show current track
+    const song = np?.now_playing?.song;
+    const track =
+      (song?.artist && song?.title)
+        ? `${song.artist} — ${song.title}`
+        : (song?.text || np?.now_playing?.text || "—");
+
+    el.textContent = `AutoDJ — ${track}`;
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (m) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[m]));
+  }
+
+  // ---- Volume --------------------------------------------------------------
+  function loadVolume() {
+    const saved = Number(localStorage.getItem(LS_VOL_KEY));
+    if (Number.isFinite(saved) && saved >= 0 && saved <= 1) return saved;
+    return 0.85;
+  }
+
+  function applyVolume(vol) {
+    const v = Math.max(0, Math.min(1, Number(vol)));
+    audio.volume = v;
+
+    const slider = $("vol");
+    if (slider && Number(slider.value) !== v) slider.value = String(v);
+
+    localStorage.setItem(LS_VOL_KEY, String(v));
+  }
+
+  // ---- Play / Pause --------------------------------------------------------
+  async function togglePlay() {
+    try {
+      if (audio.paused) {
+        await audio.play();
+      } else {
+        audio.pause();
+      }
+    } catch (e) {
+      // Autoplay restrictions or other failures.
+      // Keep UI honest.
+      console.warn("Play failed:", e);
+    } finally {
+      setButtonPlaying(!audio.paused);
+    }
+  }
+
+  function wireControls() {
+    const playBtn = $("playBtn");
+    if (playBtn && !playBtn.__rpBound) {
+      playBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        togglePlay();
+      });
+      playBtn.__rpBound = true;
+    }
+
+    const vol = $("vol");
+    if (vol && !vol.__rpBound) {
+      vol.addEventListener("input", () => applyVolume(vol.value));
+      vol.__rpBound = true;
+    }
+
+    // Keep UI synced if user pauses via browser UI / media keys
+    if (!audio.__rpBound) {
+      audio.addEventListener("play", () => setButtonPlaying(true));
+      audio.addEventListener("pause", () => setButtonPlaying(false));
+      audio.__rpBound = true;
+    }
+
+    // Initial UI state
+    setButtonPlaying(!audio.paused);
+    applyVolume(loadVolume());
+  }
+
+  // ---- Now Playing polling -------------------------------------------------
+  let lastNPJson = null;
+
+  async function fetchNowPlaying() {
+    try {
+      const res = await fetch(NOWPLAYING_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`NowPlaying HTTP ${res.status}`);
+      const data = await res.json();
+
+      lastNPJson = data;
+
+      // Live status
+      const isLive = !!data?.live?.is_live;
+      setLiveUI(isLive);
+
+      // Now playing + art
+      setNowPlayingUI(data);
+
+      // Listeners
+      setListenersUI(data);
+
+      // Sidebar "On Air Now"
+      setOnAirNow(data);
+
+    } catch (err) {
+      console.warn("NowPlaying fetch failed:", err);
+
+      // Fail-soft UI
+      safeText($("npText"), "Now playing unavailable.");
+      safeText($("npTextSide"), "Now playing unavailable.");
+
+      const onAir = $("onAirText");
+      if (onAir) onAir.textContent = "On air now unavailable.";
+
+      setLiveUI(false);
+
+      const listener = $("listenerText");
+      if (listener) listener.textContent = "Listeners: –";
+    }
+  }
+
+  function startPolling() {
+    fetchNowPlaying();
+    window.__radiopengNPInterval && clearInterval(window.__radiopengNPInterval);
+    window.__radiopengNPInterval = setInterval(fetchNowPlaying, POLL_MS);
+  }
+
+  // ---- Swup compatibility --------------------------------------------------
+  // When Swup replaces content, re-wire controls and refresh UI into new DOM.
+  function onDomChanged() {
+    wireControls();
+
+    // If we already have NP data, paint immediately so you don't see "Loading…"
+    if (lastNPJson) {
+      const isLive = !!lastNPJson?.live?.is_live;
+      setLiveUI(isLive);
+      setNowPlayingUI(lastNPJson);
+      setListenersUI(lastNPJson);
+      setOnAirNow(lastNPJson);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    wireControls();
+    startPolling();
+  });
+
+  // Swup emits custom events; listen even if Swup isn't present.
+  document.addEventListener("swup:contentReplaced", () => {
+    onDomChanged();
+  });
+
+  // Also handle "pageshow" for back/forward cache cases.
+  window.addEventListener("pageshow", () => {
+    onDomChanged();
+  });
+
+  // Expose a tiny debug hook (optional)
+  window.RadioPengPlayer = {
+    audio,
+    refreshNowPlaying: fetchNowPlaying
+  };
+})();

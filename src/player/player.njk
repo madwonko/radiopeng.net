@@ -1,0 +1,46 @@
+---
+layout: null
+title: RadioPeng Player
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RadioPeng Player</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body class="popup">
+
+  <div class="popup-wrap">
+    <div class="popup-row">
+      <img id="artImg" class="art art-pop" alt="Cover art" src="/assets/cover-fallback.png" />
+
+      <div class="popup-now">
+        <div class="label">Now Playing</div>
+        <div class="value" id="npText">Loading…</div>
+
+        <div class="meta" style="margin-top:6px;">
+          <span class="badge">
+            <span class="dot" id="liveDot"></span>
+            <span id="liveStatus">Idle</span>
+          </span>
+          <span style="margin-left:10px;" id="listenerText">Listeners: –</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="popup-controls">
+      <button class="btn" id="playBtn">Play</button>
+	</div>
+      <div class="vol">
+        <span>Volume</span>
+        <input id="vol" type="range" min="0" max="1" step="0.01" value="0.85" />
+      </div>
+    <!-- </div> -->
+  </div>
+
+  <script src="/assets/player.js"></script>
+</body>
+</html>

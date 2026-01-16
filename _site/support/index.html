@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Support RadioPeng</title>
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+  <link rel="stylesheet" href="/assets/style.css" />
+  <link rel="alternate" type="application/rss+xml" title="RadioPeng RSS" href="/feed.xml" />
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- TOP HEADER (logo moved out; header is nav only) -->
+    <header class="topbar">
+      <nav class="topnav">
+        <a class="pill" href="/">Home</a>
+        <a class="pill" href="/articles/">Articles</a>
+        <a class="pill" href="/tags/">Tags</a>
+        <a class="pill" href="/feed.xml">RSS</a>
+      </nav>
+    </header>
+
+    <!-- PORTAL LAYOUT -->
+    <div class="portal">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+
+        <!-- SIDEBAR LOGO (moved here) -->
+        <div class="sidebar-brand">
+          <a href="/" class="logo-link sidebar-logo" aria-label="RadioPeng home">
+            <img src="/assets/radiopeng-logo.png" alt="RadioPeng" class="site-logo" />
+          </a>
+
+          <div class="eq" aria-hidden="true" title="signal">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <!-- LISTEN -->
+        <section class="sidebox listenbox">
+          <h3>Listen</h3>
+          <p class="meta">Live stream (MP3)</p>
+
+          
+          <button class="side-link" id="openPlayer" type="button">
+            Listen (player)
+          </button>
+
+          <a class="side-link" href="https://a5.asurahosting.com:7780/radio.mp3" data-no-swup>
+            Direct stream (MP3)
+          </a>
+
+          <p class="meta" style="margin-top:10px;">
+            <span class="npRow">
+              <span class="npLabel">Now Playing</span>
+              <span id="npShowSide" class="npShow hidden"></span>
+            </span><br />
+            <strong id="npTextSide">Loading…</strong>
+          </p>
+        </section>
+
+        <!-- SCHEDULE (DATA-DRIVEN)
+        <section class="sidebox schedulebox">
+  <h3>On Air Now</h3>
+
+
+
+  <a class="side-link" href="/shows/">
+    Full schedule →
+  </a>
+</section>
+ -->
+
+        <section class="sidebox schedulebox">
+          <h3>On Air Now</h3>
+          <a href="/schedule/" class="side-link" id="openSchedule" data-no-swup>
+            Full Schedule (table)
+          </a>
+        </section>
+
+        <!-- BROWSE -->
+        <section class="sidebox">
+          <h3>Browse</h3>
+          <a class="side-link" href="/articles/">Latest Articles</a>
+          <a class="side-link" href="/tags/">Tags</a>
+          <a class="side-link" href="/feed.xml">RSS Feed</a>
+          <a class="side-link" href="/shows/">Shows</a>
+          <a class="side-link" href="/shows.xml">Show RSS</a>
+        </section>
+
+        <!-- SUPPORT -->
+        <section class="sidebox supportbox">
+          <h3>Support RadioPeng</h3>
+
+          <p class="meta">
+            RadioPeng is independent and listener-supported.
+            If the signal matters to you, help keep it on the air.
+          </p>
+
+          <a class="side-link" href="/support/">
+            Donate
+          </a>
+
+          <a class="side-link" href="/support/#monthly">
+            Become a sustaining listener
+          </a>
+        </section>
+
+        <!-- ABOUT -->
+        <section class="sidebox">
+          <h3>About</h3>
+          <p class="meta">
+            RadioPeng is a small, listener-supported station broadcasting
+            strange, beautiful, occasionally unwise music.
+          </p>
+        </section>
+
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="main" id="swup">
+        <div class="now-playing-ribbon">
+          <div class="ticker">
+            <span id="nowPlayingText">▶ Now Playing: loading…</span>
+          </div>
+        </div>
+
+        <!-- MAIN BANNER -->
+        <div class="main-banner">
+          <img
+            id="dailyBanner"
+            src="/assets/banners/banner-01.gif"
+            alt="RadioPeng broadcast banner"
+            loading="lazy"
+          />
+        </div>
+
+        
+
+        <section class="up-next">
+  <div class="up-next-head">
+    <h2>Up Next</h2>
+    <a class="up-next-link" href="/shows/">Full schedule →</a>
+  </div>
+
+  <div class="up-next-list">
+    
+      <div class="up-next-item">
+        <div class="up-next-time">Fri • 8:00 PM</div>
+        <div class="up-next-title">Modern Lounge</div>
+        <div class="up-next-dj">DJ: Madwonko</div>
+      </div>
+    
+      <div class="up-next-item">
+        <div class="up-next-time">Sat • 1:00 AM</div>
+        <div class="up-next-title">Night Soundscapes</div>
+        <div class="up-next-dj">DJ: Peng</div>
+      </div>
+    
+      <div class="up-next-item">
+        <div class="up-next-time">Sat • 3:00 AM</div>
+        <div class="up-next-title">Soundtracks @ Night</div>
+        <div class="up-next-dj">DJ: Peng</div>
+      </div>
+    
+      <div class="up-next-item">
+        <div class="up-next-time">Sat • 6:00 AM</div>
+        <div class="up-next-title">Papa Times</div>
+        <div class="up-next-dj">DJ: Gianni Papa</div>
+      </div>
+    
+      <div class="up-next-item">
+        <div class="up-next-time">Sat • 8:00 PM</div>
+        <div class="up-next-title">The Space Cowboy</div>
+        <div class="up-next-dj">DJ: Jah Bong</div>
+      </div>
+    
+  </div>
+</section>
+
+
+        
+<h1>Support RadioPeng</h1>
+
+<p>
+RadioPeng is an independent station built on curiosity,
+community, and a stubborn love of music.
+</p>
+
+<p>
+Your support helps cover hosting, streaming,
+and the slow accumulation of beautiful noise.
+</p>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- PLAYER BAR (your existing UI) -->
+  <div class="playerbar">
+    <div class="player-inner">
+      <button class="btn" id="playBtn" type="button">Play</button>
+
+      <div class="now">
+        <img id="artImg" class="art" alt="Cover art" src="/assets/cover-fallback.png" />
+
+        <div class="nowtext">
+          <div class="label">
+            Now Playing
+            <span id="npShow" class="npShow hidden"></span>
+          </div>
+
+          <div class="value" id="npText">Loading…</div>
+
+          <div class="meta" style="margin-top:6px;">
+            <span class="badge">
+              <span class="dot" id="liveDot"></span>
+              <span id="liveStatus">Idle</span>
+            </span>
+
+            <span class="djBadge" id="djName" style="margin-left:10px;">Auto DJ</span>
+
+            <span style="margin-left:10px;" id="listenerText">Listeners: –</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="vol">
+        <span>Volume</span>
+        <input
+          id="vol"
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value="0.85"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- IN-PAGE PLAYER DRAWER (iPhone-safe entry point) -->
+  <div id="playerDrawer" class="playerDrawer" hidden>
+    <button id="closePlayer" type="button" aria-label="Close player">✕</button>
+
+    <audio id="rpAudio" controls preload="none" playsinline>
+      <source src="https://a5.asurahosting.com:7780/radio.mp3" type="audio/mpeg">
+    </audio>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="/assets/player.js" defer></script>
+  <script src="https://unpkg.com/swup@4" defer></script>
+
+  <script>
+    // Swup init (kept outside player.js so player remains stable)
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof Swup === "undefined") return;
+
+      const swup = new Swup({
+        containers: ["#swup"],
+        linkSelector: "a[href^='/']:not([href^='//']):not([href^='http']):not([data-no-swup])"
+      });
+
+      swup.hooks.on("content:replace", () => window.scrollTo(0, 0));
+    });
+  </script>
+
+  <!-- MIRROR NOW PLAYING + SHOW INTO SIDEBAR -->
+  <script>
+    (function () {
+      const mainNP = document.getElementById("npText");
+      const sideNP = document.getElementById("npTextSide");
+
+      const mainShow = document.getElementById("npShow");
+      const sideShow = document.getElementById("npShowSide");
+
+      if (!mainNP || !sideNP) return;
+
+      const sync = () => {
+        sideNP.textContent = mainNP.textContent || "—";
+
+        if (mainShow && sideShow) {
+          const showTxt = (mainShow.textContent || "").trim();
+          if (showTxt) {
+            sideShow.textContent = showTxt;
+            sideShow.classList.remove("hidden");
+          } else {
+            sideShow.textContent = "";
+            sideShow.classList.add("hidden");
+          }
+        }
+      };
+
+      sync();
+      setInterval(sync, 1000);
+    })();
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const link = document.getElementById("openSchedule");
+      if (!link) return;
+
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        window.open(
+          link.href,
+          "RadioPengSchedule",
+          "width=1200,height=800,resizable=yes,scrollbars=yes"
+        );
+      });
+    });
+  </script>
+
+  <script>
+    async function updateNowPlaying() {
+      try {
+        const res = await fetch("https://a5.asurahosting.com/api/nowplaying/239");
+        const data = await res.json();
+
+        const np = data.now_playing.song;
+        document.getElementById("nowPlayingText").textContent =
+          `▶ Now Playing: ${np.artist} — ${np.title}`;
+      } catch (e) {
+        console.warn("Now Playing fetch failed");
+      }
+    }
+
+    updateNowPlaying();
+    setInterval(updateNowPlaying, 15000);
+  </script>
+
+</body>
+</html>

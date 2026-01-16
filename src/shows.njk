@@ -1,0 +1,29 @@
+---
+layout: layout-base.njk
+title: Shows
+permalink: /shows/index.html
+---
+
+<section class="hero">
+  <h1>Show Archive</h1>
+  <p>Recorded transmissions. Some are educational. Some are evidence.</p>
+</section>
+
+<section class="card">
+  <p class="meta">Found {{ collections.shows | length }} episode(s).</p>
+
+  <div class="article-list">
+    {% set eps = collections.shows | reverse %}
+    {% for ep in eps %}
+      <a class="article" href="{{ ep.url }}">
+        <div class="kicker">{{ ep.date | readableDate }}</div>
+        <div class="name">{{ ep.data.title }}</div>
+        <div class="blurb">
+          {% if ep.data.show %}<strong>{{ ep.data.show }}</strong>{% endif %}
+          {% if ep.data.dj %} • DJ: {{ ep.data.dj }}{% endif %}
+          {% if ep.data.duration %} • {{ ep.data.duration }}{% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>

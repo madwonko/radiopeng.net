@@ -1,0 +1,65 @@
+<!-- Player Modal -->
+<div id="rpModal" class="rp-modal" aria-hidden="true">
+  <div class="rp-backdrop" data-close></div>
+
+  <div class="rp-sheet" role="dialog" aria-modal="true" aria-label="Episode player">
+    <button class="rp-close" type="button" aria-label="Close" data-close>×</button>
+
+    <img id="rpCover" class="rp-cover" src="" alt="" />
+
+    <div class="rp-meta">
+      <h2 id="rpTitle" class="rp-title">Episode title</h2>
+      <div id="rpDate" class="rp-date">Jan 16, 2026, 7:57 AM</div>
+
+      <div class="rp-actions">
+        <button id="rpShare" class="rp-iconbtn" type="button" aria-label="Share">
+          <!-- share icon -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1L7.9 9.1A3 3 0 0 0 6 8a3 3 0 1 0 2.83 4.01l7.27 4.09A3 3 0 1 0 18 14a3 3 0 0 0-1.1.2l-7.27-4.09A3 3 0 0 0 9 10c0-.11 0-.22-.02-.33l7.34-4.13A3 3 0 0 0 18 8z"/>
+          </svg>
+        </button>
+
+        <button id="rpInfo" class="rp-iconbtn" type="button" aria-label="Info">
+          <!-- info icon -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 6zm1.5 13h-3v-2h1v-5h-1V10h2.5v7h.5v2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- waveform placeholder (visual only) -->
+    <div class="rp-wave" aria-hidden="true">
+      <div class="rp-bars">
+        <!-- a bunch of bars -->
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="rp-controls">
+      <button id="rpRate" class="rp-chip" type="button" aria-label="Playback rate">1×</button>
+
+      <button id="rpBack" class="rp-round" type="button" aria-label="Back 15 seconds">15</button>
+
+      <button id="rpPlay" class="rp-play" type="button" aria-label="Play/pause">
+        <span id="rpPlayIcon">▶</span>
+      </button>
+
+      <button id="rpFwd" class="rp-round" type="button" aria-label="Forward 15 seconds">15</button>
+
+      <button id="rpMute" class="rp-round" type="button" aria-label="Mute/unmute">🔊</button>
+    </div>
+
+    <div class="rp-progress">
+      <input id="rpSeek" class="rp-seek" type="range" min="0" max="1000" value="0" aria-label="Seek" />
+      <div class="rp-time">
+        <span id="rpCur">00:00</span>
+        <span id="rpDur">00:00</span>
+      </div>
+    </div>
+
+    <audio id="rpAudio" preload="metadata"></audio>
+  </div>
+</div>
