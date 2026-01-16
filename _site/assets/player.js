@@ -1,254 +1,250 @@
 /* /assets/player.js
-   RadioPeng player controller + AzuraCast Now Playing UI
+   RadioPeng unified player controller + Now Playing updater
+   Works with:
+   - Header button:   #playToggle
+   - Bottom bar:      #playBtn, #vol, #npText, #artImg, #djName, #listenerText, #liveStatus, #liveDot, #npShow
+   - Ribbon:          #nowPlayingText
+   - Header NP text:  #headerNowPlaying
+   Audio element (preferred): #radioPlayer
+   Fallback audio element:    #rpAudio
 */
 
 (() => {
-  // --- CONFIG ---
+  // --------- CONFIG ----------
   const STREAM_URL = "https://a5.asurahosting.com:7780/radio.mp3";
-  const NOWPLAYING_URL = "https://a5.asurahosting.com/api/nowplaying/max";
+  const NOWPLAYING_URL = "https://a5.asurahosting.com/api/nowplaying/239";
+  const NOWPLAYING_INTERVAL_MS = 15000;
 
-  const POLL_MS = 15000;
-  const VOL_KEY = "rp_volume";
+  // --------- HELPERS ----------
+  const $ = (id) => document.getElementById(id);
 
-  let pollTimer = null;
-  let inFlight = null;
-
-  // --- HELPERS ---
-  function $(id) {
-    return document.getElementById(id);
-  }
-
-  function safeText(el, text) {
+  function setText(el, value) {
     if (!el) return;
-    el.textContent = text;
+    el.textContent = value;
   }
 
-  function showEl(el) {
+  function setHidden(el, hidden) {
     if (!el) return;
-    el.classList.remove("hidden");
+    el.classList.toggle("hidden", !!hidden);
   }
 
-  function hideEl(el) {
-    if (!el) return;
-    el.classList.add("hidden");
+  function safeTrim(s) {
+    return (s ?? "").toString().trim();
   }
 
-  function setLiveDot(isLive) {
-    const dot = $("liveDot");
-    if (!dot) return;
-    dot.classList.toggle("live", !!isLive);
+  function formatSong(np) {
+    const artist = safeTrim(np?.artist);
+    const title = safeTrim(np?.title);
+    if (artist && title) return `${artist} — ${title}`;
+    return artist || title || "Loading…";
   }
 
-  function formatSong(songObj) {
-    const artist = (songObj?.artist || "").trim();
-    const title = (songObj?.title || "").trim();
-    if (artist && title) return `${artist} – ${title}`;
-    if (title) return title;
-    return "—";
+  // --------- AUDIO (single source of truth) ----------
+  function getAudioEl() {
+    // Prefer the hidden/global audio, fallback to drawer audio if that’s what exists
+    return $("radioPlayer") || $("rpAudio");
   }
 
-  function getSavedVolume() {
-    const v = parseFloat(localStorage.getItem(VOL_KEY));
-    if (Number.isFinite(v) && v >= 0 && v <= 1) return v;
-    return 0.85;
-  }
+  function ensureAudioSource(audio) {
+    if (!audio) return;
 
-  function saveVolume(v) {
-    try {
-      localStorage.setItem(VOL_KEY, String(v));
-    } catch (_) {}
-  }
-
-  function ensureAudioSrc(audioEl) {
-    if (!audioEl) return;
-    const srcEl = audioEl.querySelector("source");
-    if (srcEl) {
-      // keep whatever you have, but ensure it points correctly
-      if (!srcEl.src || !srcEl.src.includes("radio.mp3")) {
-        srcEl.src = STREAM_URL;
-        audioEl.load();
+    // If <source> exists and already points to STREAM_URL, cool.
+    // If not, set src directly to be safe.
+    const source = audio.querySelector("source");
+    const current = source?.getAttribute("src") || audio.getAttribute("src") || "";
+    if (!current || current !== STREAM_URL) {
+      if (source) {
+        source.setAttribute("src", STREAM_URL);
+        // reload source list
+        audio.load();
+      } else {
+        audio.src = STREAM_URL;
       }
+    }
+  }
+
+  // --------- UI BINDING ----------
+  function bindControls() {
+    const audio = getAudioEl();
+    if (!audio) {
+      console.warn("[player.js] No audio element found (#radioPlayer or #rpAudio).");
       return;
     }
-    const src = document.createElement("source");
-    src.src = STREAM_URL;
-    src.type = "audio/mpeg";
-    audioEl.appendChild(src);
-    audioEl.load();
-  }
+    ensureAudioSource(audio);
 
-  // AzuraCast sometimes returns array (multi-station) or object (single station)
-  function normalizePayload(json) {
-    if (Array.isArray(json)) return json[0] || null;
-    if (json && typeof json === "object") return json;
-    return null;
-  }
-
-  // --- UI INIT ---
-  function bindUI() {
-    const playBtn = $("playBtn");
-    const audio = $("rpAudio");
+    const playBtn = $("playBtn"); // bottom bar button
+    const playToggle = $("playToggle"); // header button
     const vol = $("vol");
-    const drawer = $("playerDrawer");
+
+    const setPlayingUI = (isPlaying) => {
+      if (playBtn) playBtn.textContent = isPlaying ? "Pause" : "Play";
+      if (playToggle) playToggle.textContent = isPlaying ? "❚❚" : "▶︎";
+    };
+
+    // Initial UI state
+    setPlayingUI(!audio.paused);
+
+    // Keep UI synced even if playback state changes elsewhere
+    audio.addEventListener("play", () => setPlayingUI(true));
+    audio.addEventListener("pause", () => setPlayingUI(false));
+    audio.addEventListener("ended", () => setPlayingUI(false));
+
+    async function togglePlay() {
+      try {
+        if (audio.paused) {
+          const p = audio.play();
+          if (p && typeof p.then === "function") await p;
+        } else {
+          audio.pause();
+        }
+      } catch (err) {
+        console.warn("[player.js] Play blocked by browser policy:", err);
+        // Optional: you could open the drawer here if you want
+        // $("playerDrawer")?.removeAttribute("hidden");
+      }
+    }
+
+    playBtn?.addEventListener("click", togglePlay);
+    playToggle?.addEventListener("click", togglePlay);
+
+    // Volume
+    if (vol) {
+      const initial = parseFloat(vol.value);
+      if (!Number.isNaN(initial)) audio.volume = initial;
+
+      vol.addEventListener("input", () => {
+        const v = parseFloat(vol.value);
+        if (!Number.isNaN(v)) audio.volume = v;
+      });
+    }
+
+    // If you still use the drawer open/close buttons, wire them safely
     const openPlayer = $("openPlayer");
     const closePlayer = $("closePlayer");
+    const drawer = $("playerDrawer");
 
-    ensureAudioSrc(audio);
+    openPlayer?.addEventListener("click", () => {
+      if (!drawer) return;
+      drawer.hidden = false;
+      // If the drawer contains the audio element (rpAudio), this is helpful on iOS
+      // Otherwise harmless.
+    });
 
-    // Volume init
-    const startVol = getSavedVolume();
-    if (audio) audio.volume = startVol;
-    if (vol) vol.value = String(startVol);
-
-    if (vol && audio) {
-      vol.addEventListener("input", () => {
-        const v = Math.max(0, Math.min(1, parseFloat(vol.value)));
-        audio.volume = v;
-        saveVolume(v);
-      });
-    }
-
-    // Drawer open/close
-    if (openPlayer && drawer) {
-      openPlayer.addEventListener("click", () => {
-        drawer.hidden = false;
-        drawer.classList.add("open");
-      });
-    }
-
-    if (closePlayer && drawer) {
-      closePlayer.addEventListener("click", () => {
-        drawer.classList.remove("open");
-        drawer.hidden = true;
-      });
-    }
-
-    // Play/Pause
-    if (playBtn && audio) {
-      const updatePlayLabel = () => {
-        playBtn.textContent = audio.paused ? "Play" : "Pause";
-      };
-
-      playBtn.addEventListener("click", async () => {
-        try {
-          if (audio.paused) {
-            await audio.play();
-          } else {
-            audio.pause();
-          }
-          updatePlayLabel();
-        } catch (err) {
-          console.error("Audio play failed:", err);
-          // If autoplay is blocked, open drawer so user can interact.
-          if (drawer) {
-            drawer.hidden = false;
-            drawer.classList.add("open");
-          }
-        }
-      });
-
-      audio.addEventListener("play", updatePlayLabel);
-      audio.addEventListener("pause", updatePlayLabel);
-      updatePlayLabel();
-    }
+    closePlayer?.addEventListener("click", () => {
+      if (!drawer) return;
+      drawer.hidden = true;
+    });
   }
 
-  // --- NOW PLAYING ---
-  async function updateNowPlaying() {
-    if (inFlight) {
-      try { inFlight.abort(); } catch (_) {}
-    }
-    inFlight = new AbortController();
+  // --------- NOW PLAYING ----------
+  async function updateNowPlayingOnce() {
+    // Elements across the site
+    const ribbon = $("nowPlayingText");
+    const headerNP = $("headerNowPlaying");
+
+    const npText = $("npText");
+    const artImg = $("artImg");
+    const djName = $("djName");
+    const listenerText = $("listenerText");
+    const liveStatus = $("liveStatus");
+    const liveDot = $("liveDot");
+    const npShow = $("npShow");
 
     try {
-      const res = await fetch(NOWPLAYING_URL, {
-        cache: "no-store",
-        signal: inFlight.signal
-      });
+      const res = await fetch(NOWPLAYING_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
 
-      if (!res.ok) throw new Error(`NowPlaying HTTP ${res.status}`);
+      // AzuraCast now playing objects vary slightly; these are common
+      const np = data?.now_playing?.song;
+      const text = formatSong(np);
 
-      const raw = await res.json();
-      const data = normalizePayload(raw);
-      if (!data) throw new Error("NowPlaying payload not recognized");
+      // Ribbon + header text
+      if (ribbon) ribbon.textContent = `▶ Now Playing: ${text}`;
+      if (headerNP) headerNP.textContent = text;
 
-      // Re-query elements (Swup-safe)
-      const npText = $("npText");
-      const npShow = $("npShow");
-      const djName = $("djName");
-      const liveStatus = $("liveStatus");
-      const listenerText = $("listenerText");
-      const artImg = $("artImg");
+      // Bottom bar main text
+      setText(npText, text);
 
-      // Track
-      const song = data?.now_playing?.song;
-      safeText(npText, song ? formatSong(song) : "—");
+      // Artwork
+      const art =
+        data?.now_playing?.song?.art ||
+        data?.now_playing?.song?.artwork ||
+        data?.now_playing?.song?.art_url ||
+        data?.now_playing?.song?.artUrl;
+      if (artImg && art) artImg.src = art;
 
-      // Cover art
-      const artUrl = (song?.art || "").trim();
-      if (artImg) {
-        artImg.src = artUrl ? artUrl : "/assets/cover-fallback.png";
-      }
+      // Live vs AutoDJ
+      const isLive =
+        !!data?.live?.is_live ||
+        !!data?.live?.isLive ||
+        safeTrim(data?.live?.streamer_name) !== "";
+
+      setText(liveStatus, isLive ? "Live" : "Idle");
+      if (liveDot) liveDot.style.opacity = isLive ? "1" : "0.35";
+
+      // DJ name
+      const streamer =
+        safeTrim(data?.live?.streamer_name) ||
+        safeTrim(data?.live?.streamerName) ||
+        "";
+      setText(djName, streamer || "Auto DJ");
 
       // Listeners
-      const listeners = data?.listeners?.current;
-      if (typeof listeners === "number") {
-        safeText(listenerText, `Listeners: ${listeners}`);
-      } else {
-        safeText(listenerText, "Listeners: –");
+      const listeners =
+        data?.listeners?.current ??
+        data?.listeners?.unique ??
+        data?.listeners ??
+        null;
+      if (listenerText) {
+        listenerText.textContent =
+          listeners === null || listeners === undefined
+            ? "Listeners: –"
+            : `Listeners: ${listeners}`;
       }
 
-      // Live / DJ / Show title
-      const isLive = !!data?.live?.is_live;
+      // Optional: show/program name if provided
+      const showTitle =
+        safeTrim(data?.now_playing?.sh_id) || // sometimes numeric, not useful
+        safeTrim(data?.now_playing?.playlist) ||
+        safeTrim(data?.playing_next?.playlist) ||
+        safeTrim(data?.station?.name);
 
-      if (isLive) {
-        setLiveDot(true);
-        safeText(liveStatus, "Live");
-
-        const streamerName = (data?.live?.streamer_name || "").trim();
-        safeText(djName, streamerName || "Live DJ");
-
-        const showTitle = (data?.live?.broadcast_title || "").trim();
-        if (showTitle) {
-          safeText(npShow, showTitle);
-          showEl(npShow);
+      if (npShow) {
+        // If you have a better show field, swap it here
+        if (showTitle && showTitle.toLowerCase() !== "radiopeng") {
+          npShow.textContent = showTitle;
+          setHidden(npShow, false);
         } else {
-          safeText(npShow, "");
-          hideEl(npShow);
+          npShow.textContent = "";
+          setHidden(npShow, true);
         }
-      } else {
-        setLiveDot(false);
-        safeText(liveStatus, "Auto DJ");
-        safeText(djName, "Auto DJ");
-
-        safeText(npShow, "");
-        hideEl(npShow);
       }
-
-    } catch (err) {
-      if (err?.name === "AbortError") return;
-      console.error("Now Playing fetch failed:", err);
-
-      // Don't overwrite a previously good state. Only mark Offline if nothing has ever loaded.
-      const npText = $("npText");
-      const liveStatus = $("liveStatus");
-      if (npText && (npText.textContent || "").includes("Loading")) {
-        safeText(liveStatus, "Offline");
-        setLiveDot(false);
+    } catch (e) {
+      console.warn("[player.js] Now Playing fetch failed:", e);
+      // Don’t spam the UI with errors; keep previous values.
+      if (ribbon && ribbon.textContent.includes("loading")) {
+        ribbon.textContent = "▶ Now Playing: unavailable";
       }
     }
   }
 
-  function startPolling() {
-    if (pollTimer) clearInterval(pollTimer);
-    updateNowPlaying();
-    pollTimer = setInterval(updateNowPlaying, POLL_MS);
+  function startNowPlayingLoop() {
+    updateNowPlayingOnce();
+    setInterval(updateNowPlayingOnce, NOWPLAYING_INTERVAL_MS);
   }
 
-  // --- BOOT ---
+  // --------- BOOT ----------
   document.addEventListener("DOMContentLoaded", () => {
-    bindUI();
-    startPolling();
+    bindControls();
+    startNowPlayingLoop();
   });
 
+  // If Swup is swapping #swup content, some UI nodes might be replaced.
+  // Rebind lightly after navigation events if Swup exists.
+  document.addEventListener("swup:contentReplaced", () => {
+    bindControls();
+    // Now playing loop continues; just refresh once for new DOM targets.
+    updateNowPlayingOnce();
+  });
 })();

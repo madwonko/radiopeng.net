@@ -17,17 +17,16 @@
 
     <!-- TOP HEADER -->
     <header class="topbar">
-      <div class="brand">
-        <div class="brandrow">
-          <a href="/" class="logo-link" aria-label="RadioPeng home">
-            <img src="/assets/radiopeng-logo.png" alt="RadioPeng" class="site-logo" />
-          </a>
+		<div class="brandrow">
+		  <a href="/" class="logo-link" aria-label="RadioPeng home">
+			<img src="/assets/radiopeng-logo.png" alt="RadioPeng" class="site-logo">
+		  </a>
 
-          <div class="eq" aria-hidden="true" title="signal">
-            <span></span><span></span><span></span><span></span><span></span>
-          </div>
-        </div>
-      </div>
+		  <div class="header-player">
+			<button id="playToggle" class="play-btn" type="button">▶︎</button>
+			<span id="headerNowPlaying" class="header-np">loading…</span>
+		  </div>
+		</div>
 
       <nav class="topnav">
         <a class="pill" href="/">Home</a>
@@ -45,7 +44,7 @@
       <!-- SIDEBAR -->
       <aside class="sidebar">
 
-        <!-- LISTEN -->
+        <!-- LISTEN 
         <section class="sidebox listenbox">
           <h3>Listen</h3>
           <p class="meta">Live stream (MP3)</p>
@@ -66,7 +65,7 @@
             </span><br />
             <strong id="npTextSide">Loading…</strong>
           </p>
-        </section>
+        </section> -->
 
         <!-- SCHEDULE (DATA-DRIVEN) 
         <section class="sidebox schedulebox">
@@ -346,7 +345,9 @@
     });
   });
 </script>
-
+<audio id="radioPlayer" preload="none">
+  <source src="https://a5.asurahosting.com:7780/radio.mp3" type="audio/mpeg">
+</audio>
   <script>
 	async function updateNowPlaying() {
 	  try {
