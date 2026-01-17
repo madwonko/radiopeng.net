@@ -99,6 +99,7 @@
         <!-- BROWSE -->
         <section class="sidebox">
           <h3>Browse</h3>
+		  <a class="side-link" href="/music/">Music</a>
           <a class="side-link" href="/articles/">Latest Articles</a>
           <a class="side-link" href="/tags/">Tags</a>
           <a class="side-link" href="/feed.xml">RSS Feed</a>
@@ -138,6 +139,7 @@
 		  </div>
 		</div>
         <!-- MAIN BANNER -->
+		
         <div class="main-banner">
           <img
             id="dailyBanner"
@@ -146,6 +148,7 @@
             loading="lazy"
           />
         </div>
+		
 
         
 
@@ -191,24 +194,29 @@
 
     </div>
 	<!-- FOOTER -->
-	<footer class="site-footer">
+	<footer class="site-footer" id="siteFooter">
 	  <div class="footer-inner">
 
 		<div class="footer-left">
 		  <span class="footer-brand">RadioPeng</span>
-		  <span class="footer-tagline">Independent nocturnal transmissions</span>
+		  <span class="footer-tagline">Independent nocturnal transmissions, Broadcasting from somewhere between London and Virginia</span>
+		  <!-- <div class="footer-legalid">
+			
+		  </div> -->
 		</div>
 
-		<div class="footer-right">
+		<nav class="footer-right" aria-label="Footer">
 		  <a href="/schedule/">Schedule</a>
 		  <a href="/shows/">Shows</a>
 		  <a href="/articles/">Articles</a>
+		  <a href="/manifesto/">Manifesto</a>
 		  <a href="/support/">Support</a>
 		  <a href="/feed.xml">RSS</a>
-		</div>
+		</nav>
 
 	  </div>
 	</footer>
+
   </div>
 
   <!-- PLAYER BAR (your existing UI) -->
@@ -353,6 +361,57 @@
 	updateNowPlaying();
 	setInterval(updateNowPlaying, 15000);
 	</script>
+<script>
+  (function footerToneByTime() {
+    const footer = document.getElementById("siteFooter");
+    if (!footer) return;
+
+    const h = new Date().getHours(); // user's local time
+
+    // Four moods: dawn, day, dusk, night
+    let vars;
+
+    if (h >= 5 && h < 10) {
+      // Dawn: cold violet with a hint of sunrise
+      vars = {
+        "--f-bg-1": "rgba(18, 14, 24, 0.95)",
+        "--f-bg-2": "rgba(10, 8, 14, 0.98)",
+        "--f-accent": "rgba(220, 170, 110, 0.35)",
+        "--f-text": "rgba(220, 210, 230, 0.70)",
+        "--f-text-strong": "#f1eaff"
+      };
+    } else if (h >= 10 && h < 17) {
+      // Day: brighter, still restrained (no sunny beach vibes)
+      vars = {
+        "--f-bg-1": "rgba(18, 18, 22, 0.92)",
+        "--f-bg-2": "rgba(10, 10, 14, 0.98)",
+        "--f-accent": "rgba(140, 200, 210, 0.30)",
+        "--f-text": "rgba(220, 220, 235, 0.68)",
+        "--f-text-strong": "#f2f2ff"
+      };
+    } else if (h >= 17 && h < 21) {
+      // Dusk: warm bruise tones
+      vars = {
+        "--f-bg-1": "rgba(22, 12, 16, 0.95)",
+        "--f-bg-2": "rgba(8, 5, 8, 0.98)",
+        "--f-accent": "rgba(210, 90, 120, 0.32)",
+        "--f-text": "rgba(235, 210, 220, 0.70)",
+        "--f-text-strong": "#ffe9f3"
+      };
+    } else {
+      // Night: mysterious violet-black
+      vars = {
+        "--f-bg-1": "rgba(8, 6, 12, 0.95)",
+        "--f-bg-2": "rgba(4, 3, 6, 0.98)",
+        "--f-accent": "rgba(160, 120, 200, 0.40)",
+        "--f-text": "rgba(210, 200, 230, 0.70)",
+        "--f-text-strong": "#e6ddff"
+      };
+    }
+
+    for (const [k, v] of Object.entries(vars)) footer.style.setProperty(k, v);
+  })();
+</script>
 
 
 </body>

@@ -1,21 +1,19 @@
 const rssPlugin = require("@11ty/eleventy-plugin-rss");
+const { DateTime } = require("luxon");
 
 module.exports = function (eleventyConfig) {
-	eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
-	eleventyConfig.addPassthroughCopy({ "src/favicon.png": "favicon.png" });
+  // Copy static assets (CSS, JS, images) to output
+  eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
+  eleventyConfig.addPassthroughCopy({ "src/favicon.png": "favicon.png" });
 
   // RSS plugin
   eleventyConfig.addPlugin(rssPlugin);
 
-  // Copy static assets (CSS, JS) to output
-  eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
-	const { DateTime } = require("luxon");
+  // Date/time formatting helpers
+  eleventyConfig.addFilter("readableDT", (iso) => {
+    return DateTime.fromISO(iso, { zone: "America/New_York" }).toFormat("ccc • h:mm a");
+  });
 
-	eleventyConfig.addFilter("readableDT", (iso) => {
-	  return DateTime.fromISO(iso, { zone: "America/New_York" }).toFormat("ccc • h:mm a");
-	});
-
-  // Date formatting helper
   eleventyConfig.addFilter("readableDate", (dateObj) => {
     return dateObj.toLocaleDateString("en-US", {
       year: "numeric",
@@ -23,16 +21,23 @@ module.exports = function (eleventyConfig) {
       day: "2-digit",
     });
   });
-	eleventyConfig.addCollection("shows", (collectionApi) => {
-	  return collectionApi.getFilteredByGlob("./src/shows/*.md");
-	});
 
-  // Articles collection (driven by tag "articles" from src/articles/articles.json)
+  // Collections
+  eleventyConfig.addCollection("shows", (collectionApi) => {
+    return collectionApi.getFilteredByGlob("./src/shows/*.md");
+  });
+
+  // Articles collection (tag-driven)
   eleventyConfig.addCollection("articles", (collectionApi) => {
     return collectionApi.getFilteredByTag("articles");
   });
 
-  // Tag list (exclude Eleventy/system tags + our internal "articles" tag)
+  // Music collection (tag-driven)
+  eleventyConfig.addCollection("music", (collectionApi) => {
+    return collectionApi.getFilteredByTag("music");
+  });
+
+  // Tag list (exclude Eleventy/system tags + internal "articles" tag)
   eleventyConfig.addCollection("tagList", (collectionApi) => {
     const tags = new Set();
 
@@ -45,21 +50,32 @@ module.exports = function (eleventyConfig) {
 
     return [...tags].sort((a, b) => a.localeCompare(b));
   });
-  eleventyConfig.addFilter("filterByShow", (episodes, showSlug) => {
-  if (!Array.isArray(episodes)) return [];
 
-  // simple matching strategy:
-  // if episode title contains the slug or the show title, it matches
-  // you can improve this later if your RSS has a better field.
-  const needle = String(showSlug || "").toLowerCase();
-
-  return episodes.filter((e) => {
-    const t = String(e.title || "").toLowerCase();
-    return needle && t.includes(needle);
+  // Filters used by the curated music page
+  eleventyConfig.addFilter("findByUrl", (collection, url) => {
+    if (!collection || !url) return null;
+    return collection.find((p) => p.url === url) || null;
   });
-});
 
+  eleventyConfig.addFilter("pluckByUrl", (collection, urls) => {
+    if (!collection || !Array.isArray(urls)) return [];
+    return urls
+      .map((u) => collection.find((p) => p.url === u))
+      .filter(Boolean);
+  });
 
+  // Episode filtering helper (your original logic, properly closed)
+  eleventyConfig.addFilter("filterByShow", (episodes, showSlug) => {
+    if (!Array.isArray(episodes)) return [];
+    const needle = String(showSlug || "").toLowerCase();
+
+    return episodes.filter((e) => {
+      const t = String(e.title || "").toLowerCase();
+      return needle && t.includes(needle);
+    });
+  });
+
+  // Eleventy directory + template engine settings
   return {
     dir: {
       input: "src",

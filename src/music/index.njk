@@ -1,0 +1,99 @@
+---
+title: "Music Articles"
+layout: "layout-base.njk"
+showBanner: false
+
+pagination:
+  data: musicCurated.items
+  size: 5
+  alias: curatedPageUrls
+
+permalink: "/music/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNumber + 1 }}/{% endif %}"
+---
+
+<section class="content music-index">
+  <h1>Music Articles</h1>
+  <p class="lede">Curated notes from the audio fog.</p>
+
+  {# FEATURED: show only on page 1 #}
+  {% if pagination.pageNumber == 0 and musicCurated.featured %}
+    {% set featuredPost = null %}
+    {% for p in collections.all %}
+      {% if p.url == musicCurated.featured %}
+        {% set featuredPost = p %}
+      {% endif %}
+    {% endfor %}
+
+    {% if featuredPost %}
+      <div class="featured-row">
+        <a
+          class="featured-link"
+          href="{{ featuredPost.url }}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="featured-kicker">Featured</div>
+          <div class="featured-title">{{ featuredPost.data.title }}</div>
+          <div class="featured-desc">
+            {{ featuredPost.data.description
+              or featuredPost.data.summary
+              or featuredPost.templateContent | striptags | truncate(180) }}
+          </div>
+          <div class="featured-cta">Read → (new tab)</div>
+        </a>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  {# CURATED PAGE ITEMS: resolve urls to real posts without custom filters #}
+  {% set posts = [] %}
+  {% for u in curatedPageUrls %}
+    {% for p in collections.all %}
+      {% if p.url == u %}
+        {% set posts = posts.concat([p]) %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {% if posts.length %}
+    <ul class="article-list">
+      {% for post in posts %}
+        <li class="article-row">
+          <a
+            class="article-link"
+            href="{{ post.url }}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div class="article-meta">
+              <div class="article-title">{{ post.data.title }}</div>
+              <div class="article-desc">
+                {{ post.data.description
+                  or post.data.summary
+                  or post.templateContent | striptags | truncate(140) }}
+              </div>
+            </div>
+            <span class="article-arrow" aria-hidden="true">↗</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No curated music articles yet. The shelves are empty but the speakers are warm.</p>
+  {% endif %}
+
+  {# PAGINATION NAV: subtle, not spammy #}
+  <nav class="pager" aria-label="Music archive pages">
+    {% if pagination.href.previous %}
+      <a class="pager-prev" href="{{ pagination.href.previous }}">← Newer</a>
+    {% endif %}
+
+    <span class="pager-count">
+      Page {{ pagination.pageNumber + 1 }} of {{ pagination.pages.length }}
+    </span>
+
+    {% if pagination.href.next %}
+      <a class="pager-next" href="{{ pagination.href.next }}">Older →</a>
+    {% endif %}
+  </nav>
+</section>
