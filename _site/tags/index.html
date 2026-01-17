@@ -111,6 +111,8 @@
           <h3>Support RadioPeng</h3>
 
           <p class="meta">
+			RadioPeng is a small, listener-supported station broadcasting
+            strange, beautiful, occasionally unwise music.
             RadioPeng is independent and listener-supported.
             If the signal matters to you, help keep it on the air.
           </p>
@@ -124,16 +126,9 @@
           </a>
         </section>
 
-        <!-- ABOUT -->
-        <section class="sidebox">
-          <h3>About</h3>
-          <p class="meta">
-            RadioPeng is a small, listener-supported station broadcasting
-            strange, beautiful, occasionally unwise music.
-          </p>
-        </section>
-
       </aside>
+
+
 
       <!-- MAIN CONTENT -->
       <main class="main" id="swup">
@@ -211,6 +206,25 @@
       </main>
 
     </div>
+	<!-- FOOTER -->
+	<footer class="site-footer">
+	  <div class="footer-inner">
+
+		<div class="footer-left">
+		  <span class="footer-brand">RadioPeng</span>
+		  <span class="footer-tagline">Independent nocturnal transmissions</span>
+		</div>
+
+		<div class="footer-right">
+		  <a href="/schedule/">Schedule</a>
+		  <a href="/shows/">Shows</a>
+		  <a href="/articles/">Articles</a>
+		  <a href="/support/">Support</a>
+		  <a href="/feed.xml">RSS</a>
+		</div>
+
+	  </div>
+	</footer>
   </div>
 
   <!-- PLAYER BAR (your existing UI) -->
@@ -282,6 +296,10 @@
       swup.hooks.on("content:replace", () => window.scrollTo(0, 0));
     });
   </script>
+
+
+
+
 
   <!-- MIRROR NOW PLAYING + SHOW INTO SIDEBAR -->
   <script>
