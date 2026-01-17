@@ -27,13 +27,6 @@
 			<span id="headerNowPlaying" class="header-np">loading…</span>
 		  </div>
 		</div>
-
-      <nav class="topnav">
-        <a class="pill" href="/">Home</a>
-        <a class="pill" href="/articles/">Articles</a>
-        <a class="pill" href="/tags/">Tags</a>
-        <a class="pill" href="/feed.xml">RSS</a>
-      </nav>
     </header>
 
     <!-- PORTAL LAYOUT -->
@@ -71,12 +64,28 @@
         {% include "sidebar-schedule.njk" %} -->
 		
 		<section class="sidebox schedulebox">
+		
 			<h3>On Air Now</h3>
 			<a href="/schedule/" class="side-link" id="openSchedule" data-no-swup>
 				Full Schedule (table)
 			</a>
 
 		</section>
+
+
+{% if upNext %}
+<section class="sidebox up-next">
+  <h3>Up Next</h3>
+  <div class="up-next-show">
+    <div class="show-title">{{ upNext.show }}</div>
+    <div class="show-meta">{{ upNext.day }} · {{ upNext.start }}–{{ upNext.end }}</div>
+    {% if upNext.dj %}
+      <div class="show-dj">with {{ upNext.dj }}</div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
 
         <!-- BROWSE -->
         <section class="sidebox">
