@@ -6,6 +6,17 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
   eleventyConfig.addPassthroughCopy({ "src/favicon.png": "favicon.png" });
 
+  // Copy the admin config through to output
+  eleventyConfig.addPassthroughCopy({ "src/admin/config.yml": "admin/config.yml" });
+
+  // If you already have a return object below, keep it.
+  return {
+    dir: {
+      input: "src",
+      output: "_site"
+    }
+  };
+  
   // RSS plugin
   eleventyConfig.addPlugin(rssPlugin);
 
