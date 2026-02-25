@@ -1,0 +1,29 @@
+@'
+backend:
+  name: github
+  repo: madwonko/radiopeng.net
+  branch: main
+  base_url: https://YOUR-NETLIFY-OAUTH-SITE.netlify.app
+  auth_endpoint: auth
+
+site_url: https://radiopeng.net
+display_url: https://radiopeng.net
+publish_mode: simple
+
+media_folder: "src/assets/uploads"
+public_folder: "/assets/uploads"
+
+collections:
+  - name: "articles"
+    label: "Articles"
+    folder: "src/articles"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Date", name: "date", widget: "datetime" }
+      - { label: "Tags", name: "tags", widget: "list", required: false }
+      - { label: "Body", name: "body", widget: "markdown" }
+'@ | Set-Content -Encoding utf8 .\src\admin\config.yml
