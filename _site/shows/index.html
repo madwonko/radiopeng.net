@@ -17,89 +17,37 @@
 
     <!-- TOP HEADER -->
     <header class="topbar">
-		<div class="brandrow">
-		  <a href="/" class="logo-link" aria-label="RadioPeng home">
-			<img src="/assets/radiopeng-logo.png" alt="RadioPeng" class="site-logo">
-		  </a>
+      <div class="brandrow">
+        <a href="/" class="logo-link" aria-label="RadioPeng home">
+          <img src="/assets/radiopeng-logo.png" alt="RadioPeng" class="site-logo">
+        </a>
 
-		  <div class="header-player">
-			<button id="playToggle" class="play-btn" type="button">▶︎</button>
-			<span id="headerNowPlaying" class="header-np">loading…</span>
-		  </div>
-		</div>
+        <!-- <div class="header-player">
+          <button id="playToggle" class="play-btn" type="button">▶︎</button>
+          <span id="headerNowPlaying" class="header-np">loading…</span>
+        </div> -->
+      </div>
     </header>
 
     <!-- PORTAL LAYOUT -->
-
     <div class="portal">
-	
 
       <!-- SIDEBAR -->
       <aside class="sidebar">
 
-        <!-- LISTEN 
-        <section class="sidebox listenbox">
-          <h3>Listen</h3>
-          <p class="meta">Live stream (MP3)</p>
-
-          
-          <button class="side-link" id="openPlayer" type="button">
-            Listen (player)
-          </button>
-
-          <a class="side-link" href="https://a5.asurahosting.com:7780/radio.mp3" data-no-swup>
-            Direct stream (MP3)
-          </a>
-
-          <p class="meta" style="margin-top:10px;">
-            <span class="npRow">
-              <span class="npLabel">Now Playing</span>
-              <span id="npShowSide" class="npShow hidden"></span>
-            </span><br />
-            <strong id="npTextSide">Loading…</strong>
-          </p>
-        </section> -->
-
-        <!-- SCHEDULE (DATA-DRIVEN) 
         <section class="sidebox schedulebox">
-  <h3>On Air Now</h3>
+          <h3>On Air Now</h3>
+          <a href="/schedule/" class="side-link" id="openSchedule" data-no-swup>
+            Full Schedule (table)
+          </a>
+        </section>
 
-
-
-  <a class="side-link" href="/shows/">
-    Full schedule →
-  </a>
-</section>
- -->
-		
-		<section class="sidebox schedulebox">
-		
-			<h3>On Air Now</h3>
-			<a href="/schedule/" class="side-link" id="openSchedule" data-no-swup>
-				Full Schedule (table)
-			</a>
-
-		</section>
-
-
-
-<section class="sidebox up-next">
-  <h3>Up Next</h3>
-  <div class="up-next-show">
-    <div class="show-title">Jazz Classic</div>
-    <div class="show-meta">Wednesday · 11:00–15:00</div>
-    
-      <div class="show-dj">with Peng</div>
-    
-  </div>
-</section>
-
-
+        
 
         <!-- BROWSE -->
         <section class="sidebox">
           <h3>Browse</h3>
-		  <a class="side-link" href="/music/">Music</a>
+          <a class="side-link" href="/music/">Music</a>
           <a class="side-link" href="/articles/">Latest Articles</a>
           <a class="side-link" href="/tags/">Tags</a>
           <a class="side-link" href="/feed.xml">RSS Feed</a>
@@ -112,7 +60,7 @@
           <h3>Support RadioPeng</h3>
 
           <p class="meta">
-			RadioPeng is a small, listener-supported station broadcasting
+            RadioPeng is a small, listener-supported station broadcasting
             strange, beautiful, occasionally unwise music.
             RadioPeng is independent and listener-supported.
             If the signal matters to you, help keep it on the air.
@@ -129,26 +77,15 @@
 
       </aside>
 
-
-
       <!-- MAIN CONTENT -->
       <main class="main" id="swup">
-		<div class="now-playing-ribbon">
-		  <div class="ticker">
-			<span id="nowPlayingText">▶ Now Playing: loading…</span>
-		  </div>
-		</div>
-        <!-- MAIN BANNER -->
-		
-        <div class="main-banner">
-          <img
-            id="dailyBanner"
-            src="/assets/banners/banner-01.gif"
-            alt="RadioPeng broadcast banner"
-            loading="lazy"
-          />
+        <div class="now-playing-ribbon">
+          <div class="ticker">
+            <span id="nowPlayingText">▶ Now Playing: loading…</span>
+          </div>
         </div>
-		
+
+        
 
         
 
@@ -202,33 +139,31 @@
       </main>
 
     </div>
-	<!-- FOOTER -->
-	<footer class="site-footer" id="siteFooter">
-	  <div class="footer-inner">
 
-		<div class="footer-left">
-		  <span class="footer-brand">RadioPeng</span>
-		  <span class="footer-tagline">Independent nocturnal transmissions, Broadcasting from somewhere between London and Virginia</span>
-		  <!-- <div class="footer-legalid">
-			
-		  </div> -->
-		</div>
+    <!-- FOOTER -->
+    <footer class="site-footer" id="siteFooter">
+      <div class="footer-inner">
 
-		<nav class="footer-right" aria-label="Footer">
-		  <a href="/schedule/">Schedule</a>
-		  <a href="/shows/">Shows</a>
-		  <a href="/articles/">Articles</a>
-		  <a href="/manifesto/">Manifesto</a>
-		  <a href="/support/">Support</a>
-		  <a href="/feed.xml">RSS</a>
-		</nav>
+        <div class="footer-left">
+          <span class="footer-brand">RadioPeng</span>
+          <span class="footer-tagline">Independent nocturnal transmissions, Broadcasting from somewhere between the West Coast and West End</span>
+        </div>
 
-	  </div>
-	</footer>
+        <nav class="footer-right" aria-label="Footer">
+          <a href="/schedule/">Schedule</a>
+          <a href="/shows/">Shows</a>
+          <a href="/articles/">Articles</a>
+          <a href="/manifesto/">Manifesto</a>
+          <a href="/support/">Support</a>
+          <a href="/feed.xml">RSS</a>
+        </nav>
+
+      </div>
+    </footer>
 
   </div>
 
-  <!-- PLAYER BAR (your existing UI) -->
+  <!-- PLAYER BAR (persistent UI, outside #swup so it survives navigation) -->
   <div class="playerbar">
     <div class="player-inner">
       <button class="btn" id="playBtn" type="button">Play</button>
@@ -259,19 +194,12 @@
 
       <div class="vol">
         <span>Volume</span>
-        <input
-          id="vol"
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value="0.85"
-        />
+        <input id="vol" type="range" min="0" max="1" step="0.01" value="0.85" />
       </div>
     </div>
   </div>
 
-  <!-- IN-PAGE PLAYER DRAWER (iPhone-safe entry point) -->
+  <!-- IN-PAGE PLAYER DRAWER (this is the ONE audio element we keep) -->
   <div id="playerDrawer" class="playerDrawer" hidden>
     <button id="closePlayer" type="button" aria-label="Close player">✕</button>
 
@@ -285,7 +213,47 @@
   <script src="https://unpkg.com/swup@4" defer></script>
 
   <script>
-    // Swup init (kept outside player.js so player remains stable)
+    // --- Now Playing ribbon updater (safe with Swup swaps) ---
+    async function updateNowPlaying() {
+      try {
+        const res = await fetch("https://a5.asurahosting.com/api/nowplaying/239", { cache: "no-store" });
+        const data = await res.json();
+        const np = data?.now_playing?.song;
+
+        const el = document.getElementById("nowPlayingText"); // re-select every time
+        if (el && np) el.textContent = `▶ Now Playing: ${np.artist} — ${np.title}`;
+      } catch (e) {
+        // don't spam console; just quietly fail
+      }
+    }
+
+    updateNowPlaying();
+    setInterval(updateNowPlaying, 15000);
+  </script>
+
+  <script>
+    // --- schedule popup handler (needs re-binding after Swup content swap) ---
+    function bindSchedulePopup() {
+      const link = document.getElementById("openSchedule");
+      if (!link) return;
+
+      // prevent double-binding
+      if (link.dataset.bound === "1") return;
+      link.dataset.bound = "1";
+
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.open(
+          link.href,
+          "RadioPengSchedule",
+          "width=1200,height=800,resizable=yes,scrollbars=yes"
+        );
+      });
+    }
+  </script>
+
+  <script>
+    // Swup init (kept outside player.js so the player remains stable)
     document.addEventListener("DOMContentLoaded", () => {
       if (typeof Swup === "undefined") return;
 
@@ -294,13 +262,16 @@
         linkSelector: "a[href^='/']:not([href^='//']):not([href^='http']):not([data-no-swup])"
       });
 
-      swup.hooks.on("content:replace", () => window.scrollTo(0, 0));
+      swup.hooks.on("content:replace", () => {
+        window.scrollTo(0, 0);
+        bindSchedulePopup();
+        updateNowPlaying();
+      });
+
+      // first bind
+      bindSchedulePopup();
     });
   </script>
-
-
-
-
 
   <!-- MIRROR NOW PLAYING + SHOW INTO SIDEBAR -->
   <script>
@@ -333,95 +304,52 @@
     })();
   </script>
 
-
   <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const link = document.getElementById("openSchedule");
-    if (!link) return;
+    (function footerToneByTime() {
+      const footer = document.getElementById("siteFooter");
+      if (!footer) return;
 
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
+      const h = new Date().getHours();
 
-      window.open(
-        link.href,
-        "RadioPengSchedule",
-        "width=1200,height=800,resizable=yes,scrollbars=yes"
-      );
-    });
-  });
-</script>
-<audio id="radioPlayer" preload="none">
-  <source src="https://a5.asurahosting.com:7780/radio.mp3" type="audio/mpeg">
-</audio>
-  <script>
-	async function updateNowPlaying() {
-	  try {
-		const res = await fetch("https://a5.asurahosting.com/api/nowplaying/239");
-		const data = await res.json();
+      let vars;
 
-		const np = data.now_playing.song;
-		document.getElementById("nowPlayingText").textContent =
-		  `▶ Now Playing: ${np.artist} — ${np.title}`;
-	  } catch (e) {
-		console.warn("Now Playing fetch failed");
-	  }
-	}
+      if (h >= 5 && h < 10) {
+        vars = {
+          "--f-bg-1": "rgba(18, 14, 24, 0.95)",
+          "--f-bg-2": "rgba(10, 8, 14, 0.98)",
+          "--f-accent": "rgba(220, 170, 110, 0.35)",
+          "--f-text": "rgba(220, 210, 230, 0.70)",
+          "--f-text-strong": "#f1eaff"
+        };
+      } else if (h >= 10 && h < 17) {
+        vars = {
+          "--f-bg-1": "rgba(18, 18, 22, 0.92)",
+          "--f-bg-2": "rgba(10, 10, 14, 0.98)",
+          "--f-accent": "rgba(140, 200, 210, 0.30)",
+          "--f-text": "rgba(220, 220, 235, 0.68)",
+          "--f-text-strong": "#f2f2ff"
+        };
+      } else if (h >= 17 && h < 21) {
+        vars = {
+          "--f-bg-1": "rgba(22, 12, 16, 0.95)",
+          "--f-bg-2": "rgba(8, 5, 8, 0.98)",
+          "--f-accent": "rgba(210, 90, 120, 0.32)",
+          "--f-text": "rgba(235, 210, 220, 0.70)",
+          "--f-text-strong": "#ffe9f3"
+        };
+      } else {
+        vars = {
+          "--f-bg-1": "rgba(8, 6, 12, 0.95)",
+          "--f-bg-2": "rgba(4, 3, 6, 0.98)",
+          "--f-accent": "rgba(160, 120, 200, 0.40)",
+          "--f-text": "rgba(210, 200, 230, 0.70)",
+          "--f-text-strong": "#e6ddff"
+        };
+      }
 
-	updateNowPlaying();
-	setInterval(updateNowPlaying, 15000);
-	</script>
-<script>
-  (function footerToneByTime() {
-    const footer = document.getElementById("siteFooter");
-    if (!footer) return;
-
-    const h = new Date().getHours(); // user's local time
-
-    // Four moods: dawn, day, dusk, night
-    let vars;
-
-    if (h >= 5 && h < 10) {
-      // Dawn: cold violet with a hint of sunrise
-      vars = {
-        "--f-bg-1": "rgba(18, 14, 24, 0.95)",
-        "--f-bg-2": "rgba(10, 8, 14, 0.98)",
-        "--f-accent": "rgba(220, 170, 110, 0.35)",
-        "--f-text": "rgba(220, 210, 230, 0.70)",
-        "--f-text-strong": "#f1eaff"
-      };
-    } else if (h >= 10 && h < 17) {
-      // Day: brighter, still restrained (no sunny beach vibes)
-      vars = {
-        "--f-bg-1": "rgba(18, 18, 22, 0.92)",
-        "--f-bg-2": "rgba(10, 10, 14, 0.98)",
-        "--f-accent": "rgba(140, 200, 210, 0.30)",
-        "--f-text": "rgba(220, 220, 235, 0.68)",
-        "--f-text-strong": "#f2f2ff"
-      };
-    } else if (h >= 17 && h < 21) {
-      // Dusk: warm bruise tones
-      vars = {
-        "--f-bg-1": "rgba(22, 12, 16, 0.95)",
-        "--f-bg-2": "rgba(8, 5, 8, 0.98)",
-        "--f-accent": "rgba(210, 90, 120, 0.32)",
-        "--f-text": "rgba(235, 210, 220, 0.70)",
-        "--f-text-strong": "#ffe9f3"
-      };
-    } else {
-      // Night: mysterious violet-black
-      vars = {
-        "--f-bg-1": "rgba(8, 6, 12, 0.95)",
-        "--f-bg-2": "rgba(4, 3, 6, 0.98)",
-        "--f-accent": "rgba(160, 120, 200, 0.40)",
-        "--f-text": "rgba(210, 200, 230, 0.70)",
-        "--f-text-strong": "#e6ddff"
-      };
-    }
-
-    for (const [k, v] of Object.entries(vars)) footer.style.setProperty(k, v);
-  })();
-</script>
-
+      for (const [k, v] of Object.entries(vars)) footer.style.setProperty(k, v);
+    })();
+  </script>
 
 </body>
 </html>

@@ -1,0 +1,129 @@
+backend:
+  name: github
+  repo: madwonko/radiopeng.net
+  branch: main
+  base_url: https://radiopengadmin.netlify.app/
+  auth_endpoint: auth
+
+# This is the key piece for GitHub login:
+# You will set this to your OAuth provider endpoint (step 3).
+site_url: https://radiopeng.net
+display_url: https://radiopeng.net
+publish_mode: simple
+
+media_folder: "src/assets/uploads"
+public_folder: "/assets/uploads"
+
+slug:
+  encoding: "ascii"
+  clean_accents: true
+  sanitize_replacement: "-"
+
+collections:
+  - name: "djs"
+    label: "DJs"
+    format: "json"
+    extension: "json"
+    files:
+      - file: "src/_data/djs.json"
+        label: "DJ Cards"
+        name: "dj_cards"
+        fields:
+          - label: "DJs"
+            name: "items"
+            widget: "list"
+            summary: "{{fields.name}}"
+            fields:
+              - { label: "ID (short, unique)", name: "id", widget: "string" }
+              - { label: "Name", name: "name", widget: "string" }
+              - { label: "Tagline", name: "tagline", widget: "string", required: false }
+              - { label: "Bio", name: "bio", widget: "text", required: false }
+              - { label: "Photo", name: "photo", widget: "image", required: false }
+              - { label: "Active", name: "active", widget: "boolean", default: true }
+
+  - name: "shows"
+    label: "Shows"
+    format: "json"
+    extension: "json"
+    files:
+      - file: "src/_data/shows.json"
+        label: "Shows"
+        name: "shows_file"
+        fields:
+          - label: "Shows"
+            name: "items"
+            widget: "list"
+            summary: "{{fields.title}}"
+            fields:
+              - { label: "ID (short, unique)", name: "id", widget: "string" }
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "DJ ID (from DJs list)", name: "djId", widget: "string", required: false }
+              - { label: "Description", name: "description", widget: "text", required: false }
+              - { label: "Image", name: "image", widget: "image", required: false }
+              - label: "Slots"
+                name: "slots"
+                widget: "list"
+                summary: "{{fields.day}} {{fields.start}}-{{fields.end}}"
+                fields:
+                  - label: "Day"
+                    name: "day"
+                    widget: "select"
+                    options: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+                  - { label: "Start (HH:MM)", name: "start", widget: "string" }
+                  - { label: "End (HH:MM)", name: "end", widget: "string" }
+                  - { label: "Status", name: "status", widget: "select", options: ["live","rerun","auto"], default: "live", required: false }
+
+  - name: "schedule"
+    label: "Schedule"
+    format: "json"
+    extension: "json"
+    files:
+      - file: "src/_data/schedule.json"
+        label: "Schedule Table"
+        name: "schedule_table"
+        fields:
+          - label: "Timezone"
+            name: "timezone"
+            widget: "string"
+            default: "America/New_York"
+          - label: "Entries"
+            name: "items"
+            widget: "list"
+            summary: "{{fields.day}} {{fields.start}} {{fields.show}}"
+            fields:
+              - label: "Day"
+                name: "day"
+                widget: "select"
+                options: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+              - { label: "Start (HH:MM)", name: "start", widget: "string" }
+              - { label: "End (HH:MM)", name: "end", widget: "string" }
+              - { label: "Show (title)", name: "show", widget: "string" }
+              - { label: "DJ (display name)", name: "dj", widget: "string", required: false }
+              - { label: "Notes", name: "notes", widget: "string", required: false }
+
+  - name: "articles"
+    label: "Articles"
+    folder: "src/articles"
+    create: true
+    slug: "{{slug}}"
+    format: "frontmatter"
+    extension: "md"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Date", name: "date", widget: "datetime" }
+      - { label: "Description", name: "description", widget: "text", required: false }
+      - { label: "Tags", name: "tags", widget: "list", required: false }
+      - { label: "Body", name: "body", widget: "markdown" }
+
+  - name: "settings"
+    label: "Settings (future knobs)"
+    format: "json"
+    extension: "json"
+    files:
+      - file: "src/_data/settings.json"
+        label: "Site Settings"
+        name: "site_settings"
+        fields:
+          - { label: "Station name", name: "stationName", widget: "string", default: "RadioPeng" }
+          - { label: "Listen URL", name: "listenUrl", widget: "string", required: false }
+          - { label: "Anything else (notes)", name: "notes", widget: "text", required: false }
