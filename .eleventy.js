@@ -14,13 +14,17 @@ module.exports = function (eleventyConfig) {
     return DateTime.fromISO(iso, { zone: "America/New_York" }).toFormat("ccc • h:mm a");
   });
 
-  eleventyConfig.addFilter("readableDate", (dateObj) => {
-    return dateObj.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-    });
+eleventyConfig.addFilter("readableDate", (dateObj) => {
+  if (!dateObj) return ""; // don’t explode if missing
+  const d = (dateObj instanceof Date) ? dateObj : new Date(dateObj);
+  if (isNaN(d.getTime())) return ""; // invalid date input
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
   });
+});
+
 
   // Collections
   eleventyConfig.addCollection("shows", (collectionApi) => {

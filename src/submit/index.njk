@@ -1,0 +1,290 @@
+---
+title: "Submit Article"
+layout: "layout-base.njk"
+showBanner: false
+permalink: "/submit/"
+---
+
+<section class="content submit-tool">
+  <h1>Article Packager</h1>
+  <p class="lede">Paste words. Add images. Receive a polite ZIP for publication.</p>
+
+  <form id="rpForm" class="rp-form" autocomplete="off">
+    <div class="rp-grid">
+      <label>
+        <span>Title</span>
+        <input id="title" type="text" required placeholder="The sound of a planet turning…" />
+      </label>
+
+      <label>
+        <span>Slug (optional)</span>
+        <input id="slug" type="text" placeholder="leave blank to auto-generate" />
+      </label>
+
+      <label class="rp-wide">
+        <span>Description (short)</span>
+        <input id="description" type="text" placeholder="One sentence. No beige." />
+      </label>
+
+      <label class="rp-wide">
+        <span>Tags (comma-separated)</span>
+        <input id="tags" type="text" placeholder="music, review, ambient" />
+      </label>
+
+      <label class="rp-wide">
+        <span>Article text (Markdown allowed)</span>
+        <textarea id="body" rows="14" placeholder="Write in Markdown. Or raw text. We’ll behave."></textarea>
+      </label>
+
+      <label class="rp-wide">
+        <span>Images</span>
+        <input id="images" type="file" accept="image/*" multiple />
+        <small>First image becomes the hero (front matter). Others become figures below the text.</small>
+      </label>
+
+      <div id="imageMeta" class="rp-wide"></div>
+
+      <div class="rp-actions rp-wide">
+        <button type="submit" class="rp-btn">Build ZIP</button>
+        <button type="button" id="clearBtn" class="rp-btn ghost">Clear</button>
+      </div>
+
+      <div id="status" class="rp-status rp-wide" aria-live="polite"></div>
+    </div>
+  </form>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+
+  const form = $("rpForm");
+  const titleEl = $("title");
+  const slugEl = $("slug");
+  const descEl = $("description");
+  const tagsEl = $("tags");
+  const bodyEl = $("body");
+  const imagesEl = $("images");
+  const imageMetaEl = $("imageMeta");
+  const statusEl = $("status");
+  const clearBtn = $("clearBtn");
+
+  let imageMeta = [];
+
+  function slugify(str){
+    return String(str || "")
+      .toLowerCase()
+      .trim()
+      .replace(/['"]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  }
+
+  function setStatus(msg, isError=false){
+    statusEl.textContent = msg;
+    statusEl.style.opacity = "1";
+    statusEl.dataset.kind = isError ? "error" : "ok";
+  }
+
+  function escapeYaml(str){
+    // safest simple YAML scalar quoting
+    const s = String(str || "").replace(/"/g, '\\"');
+    return `"${s}"`;
+  }
+
+  function renderImageMeta(files){
+    imageMeta = Array.from(files).map((f, idx) => ({
+      file: f,
+      alt: "",
+      caption: "",
+      idx
+    }));
+
+    if(!imageMeta.length){
+      imageMetaEl.innerHTML = "";
+      return;
+    }
+
+    imageMetaEl.innerHTML = `
+      <div class="rp-image-meta">
+        <h2>Image details</h2>
+        ${imageMeta.map(item => `
+          <div class="rp-image-row">
+            <div class="rp-image-name">${item.idx === 0 ? "Hero" : "Image " + (item.idx+1)}: ${item.file.name}</div>
+            <label>
+              <span>Alt text</span>
+              <input type="text" data-idx="${item.idx}" data-field="alt" placeholder="Describe the image (for humans + screen readers)" />
+            </label>
+            <label>
+              <span>Caption (optional)</span>
+              <input type="text" data-idx="${item.idx}" data-field="caption" placeholder="Short caption, if desired" />
+            </label>
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+    imageMetaEl.querySelectorAll("input").forEach(inp => {
+      inp.addEventListener("input", (e) => {
+        const idx = Number(e.target.dataset.idx);
+        const field = e.target.dataset.field;
+        imageMeta[idx][field] = e.target.value;
+      });
+    });
+  }
+
+  imagesEl.addEventListener("change", () => {
+    renderImageMeta(imagesEl.files);
+    if(imagesEl.files.length){
+      setStatus(`${imagesEl.files.length} image(s) loaded. First one will be the hero.`);
+    } else {
+      setStatus("No images selected.");
+    }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    form.reset();
+    imageMeta = [];
+    imageMetaEl.innerHTML = "";
+    setStatus("Cleared.");
+  });
+
+  async function fileToArrayBuffer(file){
+    return await file.arrayBuffer();
+  }
+
+  function buildMarkdown({ title, slug, description, tags, body, heroPath, figureBlocks }){
+    const tagsArr = tags
+      .split(",")
+      .map(t => t.trim())
+      .filter(Boolean);
+
+    // include both 'articles' and 'music' so it lands in your collections
+    // adjust if you want different behavior
+    const finalTags = Array.from(new Set(["articles","music", ...tagsArr]));
+
+    const fm = [
+      "---",
+      `title: ${escapeYaml(title)}`,
+      description ? `description: ${escapeYaml(description)}` : null,
+      `tags: [${finalTags.map(escapeYaml).join(", ")}]`,
+      heroPath ? `image: ${heroPath}` : null,
+      "layout: layout-article.njk",
+      "showBanner: false",
+      "---",
+      ""
+    ].filter(Boolean).join("\n");
+
+    const content = [
+      fm,
+      (body || "").trim(),
+      "",
+      figureBlocks.join("\n\n"),
+      ""
+    ].join("\n");
+
+    return content.trim() + "\n";
+  }
+
+  function figureFor(path, alt, caption){
+    const safeAlt = alt && alt.trim() ? alt.trim() : "Article image";
+    const cap = caption && caption.trim() ? `<figcaption>${caption.trim()}</figcaption>` : "";
+    return `<figure>\n  <img src="${path}" alt="${safeAlt}">\n  ${cap}\n</figure>`.replace(/\n  \n/g, "\n");
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const title = titleEl.value.trim();
+    if(!title){
+      setStatus("Title is required.", true);
+      return;
+    }
+
+    const slug = slugEl.value.trim() ? slugify(slugEl.value) : slugify(title);
+    if(!slug){
+      setStatus("Could not generate a slug. Try a different title.", true);
+      return;
+    }
+
+    const description = descEl.value.trim();
+    const tags = tagsEl.value.trim();
+    const body = bodyEl.value || "";
+
+    const files = Array.from(imagesEl.files || []);
+    const zip = new JSZip();
+
+    // Where we put things inside the ZIP so you can drop them into the repo.
+    const mdDir = `src/articles/${slug}`;
+    const imgDir = `src/assets/images/articles/${slug}`;
+
+    let heroPath = "";
+    const figureBlocks = [];
+
+    if(files.length){
+      zip.folder(imgDir);
+
+      for(let i=0; i<files.length; i++){
+        const f = files[i];
+        const ext = (f.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
+        const fileName = i === 0 ? `hero.${ext}` : `img-${String(i).padStart(2,"0")}.${ext}`;
+        const fullZipPath = `${imgDir}/${fileName}`;
+
+        const ab = await fileToArrayBuffer(f);
+        zip.file(fullZipPath, ab);
+
+        const publicPath = `/assets/images/articles/${slug}/${fileName}`;
+
+        if(i === 0){
+          heroPath = publicPath;
+        } else {
+          const meta = imageMeta[i] || {};
+          figureBlocks.push(figureFor(publicPath, meta.alt, meta.caption));
+        }
+      }
+    }
+
+    const md = buildMarkdown({
+      title,
+      slug,
+      description,
+      tags,
+      body,
+      heroPath,
+      figureBlocks
+    });
+
+    zip.folder(mdDir);
+    zip.file(`${mdDir}/index.md`, md);
+
+    // Helpful README inside the ZIP
+    zip.file(`README.txt`,
+`RadioPeng Article Pack
+
+1) Copy:
+   - ${mdDir}/index.md
+   - ${imgDir}/ (if present)
+
+2) Commit + push.
+3) Run your usual build/deploy.
+
+Notes:
+- Hero image is referenced in front matter as "image:".
+- Page banner is disabled (showBanner: false).
+`);
+
+    setStatus("Packaging ZIP…");
+
+    const blob = await zip.generateAsync({ type: "blob" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `radiopeng-article-${slug}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setStatus(`ZIP ready: radiopeng-article-${slug}.zip`);
+  });
+})();
+</script>
