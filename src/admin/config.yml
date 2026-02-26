@@ -2,7 +2,7 @@ backend:
   name: github
   repo: madwonko/radiopeng.net
   branch: main
-  base_url: https://radiopengadmin.netlify.app
+  base_url: https://genuine-dolphin-de8ae5.netlify.app/
   auth_endpoint: auth
 
 site_url: https://www.radiopeng.net
