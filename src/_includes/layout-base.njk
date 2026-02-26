@@ -220,6 +220,17 @@
         );
       });
     }
+
+    function bindHomePlayButton() {
+      const homePlay = document.getElementById("playBtnHome");
+      const mainPlay = document.getElementById("playBtn");
+      if (!homePlay || !mainPlay) return;
+
+      if (homePlay.dataset.bound === "1") return;
+      homePlay.dataset.bound = "1";
+
+      homePlay.addEventListener("click", () => mainPlay.click());
+    }
   </script>
 
   <script>
@@ -235,11 +246,13 @@
       swup.hooks.on("content:replace", () => {
         window.scrollTo(0, 0);
         bindSchedulePopup();
+        bindHomePlayButton();
         updateNowPlaying();
       });
 
       // first bind
       bindSchedulePopup();
+      bindHomePlayButton();
     });
   </script>
 
