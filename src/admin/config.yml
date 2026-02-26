@@ -3,7 +3,7 @@ backend:
   name: github
   repo: madwonko/radiopeng.net
   branch: main
-  base_url: https://YOUR-OAUTH-SITE.netlify.app
+  base_url: https://radiopengadmin.netlify.app/
   auth_endpoint: auth
 
 site_url: https://www.radiopeng.net
