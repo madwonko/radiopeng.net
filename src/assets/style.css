@@ -1767,3 +1767,62 @@ body.late-night-mode .stream-card {
   border-color: rgba(195, 136, 255, .5);
   box-shadow: 0 18px 46px rgba(95, 48, 166, .26), inset 0 0 0 1px rgba(255,255,255,.05);
 }
+
+/* ---- Sitewide experimental styling ---- */
+body.experimental-site .main > h1:first-child,
+body.experimental-site .content > h1:first-child {
+  display: inline-block;
+  margin: 14px 0 10px;
+  padding: 6px 12px;
+  border: 1px solid rgba(233,237,245,.24);
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(181,168,255,.12), rgba(159,214,255,.1));
+  letter-spacing: .02em;
+}
+
+body.experimental-site .main > p,
+body.experimental-site .content > p,
+body.experimental-site .lede,
+body.experimental-site .meta {
+  color: #e9edf5cf;
+}
+
+body.experimental-site .card,
+body.experimental-site .scheduleTableWrap,
+body.experimental-site .up-next-item,
+body.experimental-site .featured-link,
+body.experimental-site .music-index .article-link,
+body.experimental-site .home-excerpt {
+  position: relative;
+  overflow: hidden;
+}
+
+body.experimental-site .card::before,
+body.experimental-site .featured-link::before,
+body.experimental-site .music-index .article-link::before {
+  content: "";
+  position: absolute;
+  left: -20%;
+  top: 0;
+  width: 38%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.06), transparent);
+  transform: skewX(-16deg);
+  pointer-events: none;
+}
+
+body.experimental-site .card:hover::before,
+body.experimental-site .featured-link:hover::before,
+body.experimental-site .music-index .article-link:hover::before {
+  animation: shardSweep .8s ease;
+}
+
+body.experimental-site .main a:not(.btn):not(.pill):not(.side-link) {
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+@keyframes shardSweep {
+  from { transform: translateX(-40%) skewX(-16deg); opacity: 0; }
+  to { transform: translateX(220%) skewX(-16deg); opacity: 1; }
+}

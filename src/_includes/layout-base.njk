@@ -236,9 +236,30 @@
       const root = document.body;
       if (!root) return;
 
+      root.classList.add("experimental-site");
+
+      const params = new URLSearchParams(window.location.search);
+      const mode = (params.get("mode") || "").toLowerCase();
+      const night = (params.get("night") || "auto").toLowerCase();
       const hour = new Date().getHours();
-      root.classList.toggle("late-night-mode", hour >= 23 || hour < 5);
-      root.classList.toggle("brutalist-mode", hour >= 18 || hour < 7);
+
+      const autoNight = hour >= 23 || hour < 5;
+      const autoBrutalist = hour >= 18 || hour < 7;
+
+      const useNight = night === "1" || night === "true" || night === "on"
+        ? true
+        : night === "0" || night === "false" || night === "off"
+          ? false
+          : autoNight;
+
+      const useBrutalist = mode === "brutalist"
+        ? true
+        : mode === "clean"
+          ? false
+          : autoBrutalist;
+
+      root.classList.toggle("late-night-mode", useNight);
+      root.classList.toggle("brutalist-mode", useBrutalist);
 
       const shapesWrap = document.getElementById("heroShapes");
       if (!shapesWrap || shapesWrap.dataset.seeded === "1") return;
