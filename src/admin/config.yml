@@ -1,9 +1,8 @@
-cat > /var/www/radiopeng/admin/config.yml <<'YAML'
 backend:
   name: github
   repo: madwonko/radiopeng.net
   branch: main
-  base_url: https://radiopengadmin.netlify.app/
+  base_url: https://radiopengadmin.netlify.app
   auth_endpoint: auth
 
 site_url: https://www.radiopeng.net
@@ -26,4 +25,3 @@ collections:
       - { label: "Date", name: "date", widget: "datetime" }
       - { label: "Tags", name: "tags", widget: "list", required: false }
       - { label: "Body", name: "body", widget: "markdown" }
-YAML
