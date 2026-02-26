@@ -1702,3 +1702,68 @@ body::before {
     animation: none !important;
   }
 }
+
+/* ---- Generative shapes ---- */
+.hero-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.hero-shapes .shape {
+  position: absolute;
+  border-radius: 4px;
+  background: linear-gradient(120deg, var(--shape-a), var(--shape-b));
+  box-shadow: 0 0 22px rgba(120, 130, 255, .18);
+  filter: blur(.2px);
+}
+
+/* ---- Brutalist mode ---- */
+body.brutalist-mode .hero-bold {
+  border-radius: 0;
+  border-width: 2px;
+  box-shadow: 8px 8px 0 rgba(0,0,0,.35);
+}
+
+body.brutalist-mode .hero-kicker,
+body.brutalist-mode .hero-tags span,
+body.brutalist-mode .stream-cta,
+body.brutalist-mode .card,
+body.brutalist-mode .article {
+  border-radius: 0;
+}
+
+body.brutalist-mode .hero-signal {
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  font-weight: 900;
+}
+
+body.brutalist-mode .article:hover {
+  transform: translate(2px,-2px);
+  box-shadow: -4px 4px 0 rgba(159,214,255,.2);
+}
+
+/* ---- Late-night mode (23:00-04:59) ---- */
+body.late-night-mode {
+  background:
+    radial-gradient(900px 540px at 85% -10%, rgba(120, 64, 255, .15), transparent 62%),
+    radial-gradient(900px 500px at 15% 0%, rgba(86, 162, 255, .12), transparent 58%),
+    #090a0f;
+}
+
+body.late-night-mode .hero-experimental {
+  background:
+    linear-gradient(135deg, rgba(35, 10, 56, .88), rgba(7, 16, 30, .82) 52%, rgba(4, 5, 8, .9)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 3px);
+}
+
+body.late-night-mode .hero-wave {
+  border-color: rgba(220, 190, 255, .35);
+}
+
+body.late-night-mode .stream-card {
+  border-color: rgba(195, 136, 255, .5);
+  box-shadow: 0 18px 46px rgba(95, 48, 166, .26), inset 0 0 0 1px rgba(255,255,255,.05);
+}

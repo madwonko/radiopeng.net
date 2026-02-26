@@ -231,6 +231,44 @@
 
       homePlay.addEventListener("click", () => mainPlay.click());
     }
+
+    function bindExperimentalMode() {
+      const root = document.body;
+      if (!root) return;
+
+      const hour = new Date().getHours();
+      root.classList.toggle("late-night-mode", hour >= 23 || hour < 5);
+      root.classList.toggle("brutalist-mode", hour >= 18 || hour < 7);
+
+      const shapesWrap = document.getElementById("heroShapes");
+      if (!shapesWrap || shapesWrap.dataset.seeded === "1") return;
+      shapesWrap.dataset.seeded = "1";
+
+      const shapeCount = 7;
+      for (let i = 0; i < shapeCount; i++) {
+        const node = document.createElement("span");
+        node.className = "shape";
+
+        const w = 42 + Math.round(Math.random() * 120);
+        const h = 8 + Math.round(Math.random() * 36);
+        const x = Math.round(Math.random() * 92);
+        const y = Math.round(Math.random() * 90);
+        const r = Math.round((Math.random() - 0.5) * 60);
+        const hueA = 180 + Math.round(Math.random() * 130);
+        const hueB = 250 + Math.round(Math.random() * 90);
+        const opacity = (0.09 + Math.random() * 0.2).toFixed(2);
+
+        node.style.width = `${w}px`;
+        node.style.height = `${h}px`;
+        node.style.left = `${x}%`;
+        node.style.top = `${y}%`;
+        node.style.transform = `rotate(${r}deg)`;
+        node.style.setProperty("--shape-a", `hsla(${hueA}, 92%, 72%, ${opacity})`);
+        node.style.setProperty("--shape-b", `hsla(${hueB}, 92%, 70%, ${opacity})`);
+
+        shapesWrap.appendChild(node);
+      }
+    }
   </script>
 
   <script>
@@ -247,12 +285,14 @@
         window.scrollTo(0, 0);
         bindSchedulePopup();
         bindHomePlayButton();
+        bindExperimentalMode();
         updateNowPlaying();
       });
 
       // first bind
       bindSchedulePopup();
       bindHomePlayButton();
+      bindExperimentalMode();
     });
   </script>
 
