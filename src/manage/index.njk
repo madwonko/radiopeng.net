@@ -1,0 +1,240 @@
+---
+layout: layout-base.njk
+title: Local Manager
+permalink: /manage/index.html
+---
+
+<section class="hero">
+  <h1>Local Manager</h1>
+  <p>Edit DJs, Shows, and Schedule JSON without Decap.</p>
+</section>
+
+<section class="card">
+  <p class="meta">This page edits JSON in-browser. Use <strong>Download</strong> and replace files in <code>src/_data/</code>, or use the File Picker buttons in Chrome/Edge to save directly.</p>
+</section>
+
+<section class="card" style="margin-top:14px;">
+  <h2>Validation</h2>
+  <div class="pill-row" style="margin-bottom:8px;">
+    <button class="btn" id="validateAll">Validate all</button>
+    <button class="btn" id="normalizeAll">Normalize text fields</button>
+  </div>
+  <div id="validationOut" class="meta" style="white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:54px;">Run validation to check data integrity.</div>
+</section>
+
+<section class="grid directory-grid" style="margin-top:14px;">
+  <article class="card">
+    <h2>DJs</h2>
+    <div class="pill-row" style="margin-bottom:8px;">
+      <button class="btn" data-load="djs">Reload</button>
+      <button class="btn" data-format="djs">Format</button>
+      <button class="btn" data-download="djs">Download</button>
+      <button class="btn" data-save="djs">Save via Picker</button>
+    </div>
+    <textarea id="json-djs" style="width:100%;min-height:320px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea>
+  </article>
+
+  <article class="card">
+    <h2>Shows</h2>
+    <div class="pill-row" style="margin-bottom:8px;">
+      <button class="btn" data-load="shows">Reload</button>
+      <button class="btn" data-format="shows">Format</button>
+      <button class="btn" data-download="shows">Download</button>
+      <button class="btn" data-save="shows">Save via Picker</button>
+    </div>
+    <textarea id="json-shows" style="width:100%;min-height:320px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea>
+  </article>
+</section>
+
+<section class="card" style="margin-top:14px;">
+  <h2>Schedule</h2>
+  <div class="pill-row" style="margin-bottom:8px;">
+    <button class="btn" data-load="schedule">Reload</button>
+    <button class="btn" data-format="schedule">Format</button>
+    <button class="btn" data-download="schedule">Download</button>
+    <button class="btn" data-save="schedule">Save via Picker</button>
+  </div>
+  <textarea id="json-schedule" style="width:100%;min-height:320px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea>
+</section>
+
+<script>
+(() => {
+  const defs = {
+    djs: { url: "/manage-data/djs.json", el: document.getElementById("json-djs"), filename: "djs.json" },
+    shows: { url: "/manage-data/shows.json", el: document.getElementById("json-shows"), filename: "shows.json" },
+    schedule: { url: "/manage-data/schedule.json", el: document.getElementById("json-schedule"), filename: "schedule.json" },
+  };
+
+  const out = document.getElementById("validationOut");
+
+  async function loadOne(key) {
+    const d = defs[key];
+    if (!d || !d.el) return;
+    const res = await fetch(d.url, { cache: "no-store" });
+    const json = await res.json();
+    d.el.value = JSON.stringify(json, null, 2);
+  }
+
+  function parseOne(key) {
+    const d = defs[key];
+    return JSON.parse(d.el.value);
+  }
+
+  function formatOne(key) {
+    const d = defs[key];
+    try {
+      d.el.value = JSON.stringify(parseOne(key), null, 2);
+    } catch (e) {
+      alert(`Invalid JSON in ${key}: ${e.message}`);
+    }
+  }
+
+  function downloadOne(key) {
+    const d = defs[key];
+    try {
+      const normalized = JSON.stringify(parseOne(key), null, 2);
+      const blob = new Blob([normalized + "\n"], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = d.filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    } catch (e) {
+      alert(`Invalid JSON in ${key}: ${e.message}`);
+    }
+  }
+
+  async function saveViaPicker(key) {
+    const d = defs[key];
+    if (!window.showSaveFilePicker) {
+      alert("File Picker not supported here. Use Download instead.");
+      return;
+    }
+    try {
+      const normalized = JSON.stringify(parseOne(key), null, 2) + "\n";
+      const handle = await window.showSaveFilePicker({
+        suggestedName: d.filename,
+        types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(normalized);
+      await writable.close();
+      alert(`Saved ${d.filename}`);
+    } catch (e) {
+      if (e?.name === "AbortError") return;
+      alert(`Save failed: ${e.message}`);
+    }
+  }
+
+  function normalizeTextFields() {
+    const targets = ["djs", "shows", "schedule"];
+
+    for (const key of targets) {
+      const d = defs[key];
+      if (!d?.el) continue;
+
+      // Convert pasted “smart quotes” and strip control chars that break JSON parsing
+      let txt = d.el.value || "";
+      txt = txt
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+
+      d.el.value = txt;
+
+      try {
+        // If JSON is valid, re-serialize to normalize escaping/newlines safely
+        const parsed = JSON.parse(d.el.value);
+        d.el.value = JSON.stringify(parsed, null, 2);
+      } catch (e) {
+        // Keep text as-is for manual fixes if still invalid
+      }
+    }
+
+    out.textContent = "🧹 Normalization complete. If validation still fails, check for accidental line breaks inside quoted values.";
+  }
+
+  function validateAll() {
+    const warnings = [];
+    const errors = [];
+
+    let djs, shows, schedule;
+    try { djs = parseOne("djs"); } catch (e) { errors.push(`DJs JSON invalid: ${e.message}`); }
+    try { shows = parseOne("shows"); } catch (e) { errors.push(`Shows JSON invalid: ${e.message}`); }
+    try { schedule = parseOne("schedule"); } catch (e) { errors.push(`Schedule JSON invalid: ${e.message}`); }
+
+    if (errors.length) {
+      out.textContent = `❌ Validation failed\n\n${errors.join("\n")}`;
+      return;
+    }
+
+    const djItems = Array.isArray(djs?.items) ? djs.items : [];
+    const showItems = Array.isArray(shows?.items) ? shows.items : [];
+    const schedItems = Array.isArray(schedule?.items) ? schedule.items : [];
+
+    const djSlugSet = new Set();
+    for (const [i, dj] of djItems.entries()) {
+      if (!dj?.slug) warnings.push(`DJs.items[${i}] missing slug`);
+      if (!dj?.name) warnings.push(`DJs.items[${i}] missing name`);
+      if (dj?.slug) {
+        if (djSlugSet.has(dj.slug)) warnings.push(`Duplicate DJ slug: ${dj.slug}`);
+        djSlugSet.add(dj.slug);
+      }
+    }
+
+    const showSlugSet = new Set();
+    const showTitleSet = new Set();
+    for (const [i, show] of showItems.entries()) {
+      if (!show?.slug) warnings.push(`Shows.items[${i}] missing slug`);
+      if (!show?.title) warnings.push(`Shows.items[${i}] missing title`);
+      if (show?.slug) {
+        if (showSlugSet.has(show.slug)) warnings.push(`Duplicate show slug: ${show.slug}`);
+        showSlugSet.add(show.slug);
+      }
+      if (show?.title) showTitleSet.add(String(show.title).toLowerCase());
+      if (show?.djSlug && !djSlugSet.has(show.djSlug)) {
+        warnings.push(`Show '${show.slug || show.title || i}' references missing DJ slug '${show.djSlug}'`);
+      }
+    }
+
+    const validDay = new Set(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+    const hhmm = /^(?:[01]\d|2[0-4]):[0-5]\d$/;
+
+    for (const [i, row] of schedItems.entries()) {
+      if (!validDay.has(row?.days)) warnings.push(`Schedule.items[${i}] invalid day '${row?.days || ""}'`);
+      if (!hhmm.test(String(row?.start || ""))) warnings.push(`Schedule.items[${i}] invalid start '${row?.start || ""}' (use HH:MM 24h)`);
+      if (!hhmm.test(String(row?.end || ""))) warnings.push(`Schedule.items[${i}] invalid end '${row?.end || ""}' (use HH:MM 24h)`);
+
+      if (!row?.showSlug) {
+        warnings.push(`Schedule.items[${i}] missing showSlug`);
+      } else if (!showSlugSet.has(row.showSlug)) {
+        warnings.push(`Schedule.items[${i}] references missing showSlug '${row.showSlug}'`);
+      }
+
+      if (row?.show && !showTitleSet.has(String(row.show).toLowerCase())) {
+        warnings.push(`Schedule.items[${i}] show title '${row.show}' doesn't match a show title in shows.json`);
+      }
+    }
+
+    if (!schedule?.timezone) warnings.push("Schedule timezone missing (recommended: America/New_York)");
+
+    if (!warnings.length) {
+      out.textContent = "✅ Validation passed. No issues found.";
+      return;
+    }
+
+    out.textContent = `⚠ Validation complete: ${warnings.length} warning(s)\n\n- ${warnings.join("\n- ")}`;
+  }
+
+  document.querySelectorAll("[data-load]").forEach(btn => btn.addEventListener("click", () => loadOne(btn.dataset.load)));
+  document.querySelectorAll("[data-format]").forEach(btn => btn.addEventListener("click", () => formatOne(btn.dataset.format)));
+  document.querySelectorAll("[data-download]").forEach(btn => btn.addEventListener("click", () => downloadOne(btn.dataset.download)));
+  document.querySelectorAll("[data-save]").forEach(btn => btn.addEventListener("click", () => saveViaPicker(btn.dataset.save)));
+  document.getElementById("validateAll")?.addEventListener("click", validateAll);
+  document.getElementById("normalizeAll")?.addEventListener("click", normalizeTextFields);
+
+  loadOne("djs");
+  loadOne("shows");
+  loadOne("schedule");
+})();
+</script>

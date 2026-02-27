@@ -1,0 +1,44 @@
+---
+layout: layout-base.njk
+title: Shows
+permalink: /programs/index.html
+---
+
+<section class="hero">
+  <h1>Show Directory</h1>
+  <p>Recurring programs on RadioPeng.</p>
+</section>
+
+<section class="grid directory-grid">
+  {% set programList = shows.items or [] %}
+  {% for show in programList %}
+    {% if show.active != false %}
+      {% set genre = (show.genre or '') | lower %}
+      {% set genreClass = 'genre-default' %}
+      {% if 'ambient' in genre or 'downtempo' in genre %}{% set genreClass = 'genre-ambient' %}{% endif %}
+      {% if 'jazz' in genre %}{% set genreClass = 'genre-jazz' %}{% endif %}
+      {% if 'experimental' in genre or 'eclectic' in genre %}{% set genreClass = 'genre-experimental' %}{% endif %}
+      {% if 'dub' in genre %}{% set genreClass = 'genre-dub' %}{% endif %}
+
+      {% set status = showStatus[show.slug] %}
+      <article class="card show-card {{ genreClass }}">
+        {% if show.artwork %}<img src="{{ show.artwork }}" alt="{{ show.title }}" class="show-thumb" />{% endif %}
+        <h2><a href="/programs/{{ show.slug }}/">{{ show.title }}</a></h2>
+        <div class="pill-row">
+          <span class="status-pill {% if status and status.onAir %}live{% else %}off{% endif %}">
+            {% if status %}{{ status.label }}{% else %}Off Air{% endif %}
+          </span>
+          {% if show.schedule %}<span class="mini-pill">{{ show.schedule }}</span>{% endif %}
+          {% if show.genre %}<span class="mini-pill">{{ show.genre }}</span>{% endif %}
+        </div>
+        {% if show.description %}<p>{{ show.description }}</p>{% endif %}
+      </article>
+    {% endif %}
+  {% endfor %}
+
+  {% if (programList | length) == 0 %}
+    <article class="card">
+      <p class="meta">No shows added yet.</p>
+    </article>
+  {% endif %}
+</section>

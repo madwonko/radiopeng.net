@@ -1,0 +1,66 @@
+---
+pagination:
+  data: djs.items
+  size: 1
+  alias: dj
+permalink: "/djs/{{ dj.slug }}/index.html"
+layout: layout-base.njk
+eleventyComputed:
+  title: "{{ dj.name }}"
+---
+
+<section class="hero">
+  <h1>{{ dj.name }}</h1>
+  {% if dj.tagline %}<p>{{ dj.tagline }}</p>{% endif %}
+</section>
+
+<section class="card">
+  {% if dj.photo %}
+    <p><img src="{{ dj.photo }}" alt="{{ dj.name }}" style="max-width:280px; width:100%; border-radius:12px;" /></p>
+  {% else %}
+    <p><span class="profile-thumb profile-fallback profile-fallback-lg">{{ (dj.name or '?') | truncate(2, true, '') | upper }}</span></p>
+  {% endif %}
+
+  {% if dj.bio %}
+    <p>{{ dj.bio }}</p>
+  {% else %}
+    <p class="meta">Bio coming soon.</p>
+  {% endif %}
+
+  <p class="meta">
+    {% if dj.pronouns %}<span>Pronouns: {{ dj.pronouns }}</span>{% endif %}
+    {% if dj.location %}{% if dj.pronouns %} • {% endif %}<span>Location: {{ dj.location }}</span>{% endif %}
+  </p>
+
+  {% if dj.social and (dj.social | length) %}
+    <p class="meta" style="margin-top:10px;">Find {{ dj.name }}:</p>
+    <ul>
+      {% for s in dj.social %}
+        <li><a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.label or s.url }}</a></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>
+
+<section class="card" style="margin-top:18px;">
+  <h2>Shows</h2>
+  {% set showList = shows.items or [] %}
+  {% set found = false %}
+
+  <div class="article-list">
+    {% for show in showList %}
+      {% if show.djSlug == dj.slug %}
+        {% set found = true %}
+        <a class="article" href="/programs/{{ show.slug }}/">
+          <div class="name">{{ show.title }}</div>
+          {% if show.schedule %}<div class="kicker">{{ show.schedule }}</div>{% endif %}
+          {% if show.description %}<div class="blurb">{{ show.description }}</div>{% endif %}
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% if not found %}
+    <p class="meta">No shows linked yet.</p>
+  {% endif %}
+</section>

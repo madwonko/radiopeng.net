@@ -1,0 +1,71 @@
+---
+pagination:
+  data: shows.items
+  size: 1
+  alias: program
+permalink: "/programs/{{ program.slug }}/index.html"
+layout: layout-base.njk
+eleventyComputed:
+  title: "{{ program.title }}"
+---
+
+{% set status = showStatus[program.slug] %}
+
+<section class="hero">
+  <h1>{{ program.title }}</h1>
+  <p class="meta">
+    <span class="status-pill {% if status and status.onAir %}live{% else %}off{% endif %}">
+      {% if status %}{{ status.label }}{% else %}Off Air{% endif %}
+    </span>
+    {% if program.schedule %} • {{ program.schedule }}{% endif %}
+    {% if program.genre %} • Genre: {{ program.genre }}{% endif %}
+  </p>
+</section>
+
+<section class="card">
+  {% if program.artwork %}
+    <p><img src="{{ program.artwork }}" alt="{{ program.title }} artwork" style="max-width:320px; width:100%; border-radius:12px;" /></p>
+  {% endif %}
+
+  {% if program.description %}
+    <p>{{ program.description }}</p>
+  {% else %}
+    <p class="meta">Description coming soon.</p>
+  {% endif %}
+
+  {% if program.djSlug %}
+    {% set roster = djs.items or [] %}
+    {% set hostName = program.djSlug %}
+    {% for dj in roster %}
+      {% if dj.slug == program.djSlug %}
+        {% set hostName = dj.name %}
+      {% endif %}
+    {% endfor %}
+
+    <p class="meta" style="margin-top:10px;">
+      Hosted by: <a href="/djs/{{ program.djSlug }}/">{{ hostName }}</a>
+    </p>
+  {% endif %}
+</section>
+
+<section class="card" style="margin-top:18px;">
+  <h2>Recent Episodes</h2>
+  {% set eps = collections.shows | reverse %}
+  {% set found = false %}
+  <div class="article-list">
+    {% for ep in eps %}
+      {% if ep.data.show and (ep.data.show | lower) == (program.title | lower) %}
+        {% set found = true %}
+        <a class="article" href="{{ ep.url }}">
+          <div class="kicker">{{ ep.date | readableDate }}</div>
+          <div class="name">{{ ep.data.title }}</div>
+          {% if ep.data.duration %}<div class="blurb">{{ ep.data.duration }}</div>{% endif %}
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% if not found %}
+    <p class="meta">No archived episodes linked yet.</p>
+  {% endif %}
+</section>

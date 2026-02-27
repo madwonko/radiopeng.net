@@ -1,1 +1,24 @@
-{ "items": [] }
+{
+  "items": [
+    {
+      "slug": "wonko-odd-hours",
+      "title": "Wonko’s Odd Hours",
+      "description": "Wonkoworld is a sonic playground where genres blur and moods melt. Presented by MadWonko, this radio show drifts through a surreal landscape of eclectic, ambient, lounge, and jazz sounds — the kind of music that feels like a dream you're not sure you had. Expect strange textures, smoky grooves, and deep vibes, all stitched together with MadWonko's quirky sensibility and crate-digging instincts.\\nFrom back-alley bossanovas to interstellar synth drones, Wonkoworld is a passport to the odd corners of cool. Tune in, zone out, and let the weird wash over you.",
+      "djSlug": "madwonko",
+      "genre": "Eclectic / Experimental",
+      "schedule": "Wednesdays 8:00–10:00 PM ET",
+      "artwork": "/assets/cover-fallback.png",
+      "active": true
+    },
+    {
+      "slug": "afterglow-transmissions",
+      "title": "Afterglow Transmissions",
+      "description": "Late-night ambient, dub, and low-light rhythms.",
+      "djSlug": "night-operator",
+      "genre": "Ambient / Downtempo",
+      "schedule": "Sundays 11:00 PM–1:00 AM ET",
+      "artwork": "/assets/cover-fallback.png",
+      "active": true
+    }
+  ]
+}

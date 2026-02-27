@@ -10,8 +10,9 @@ module.exports = function (eleventyConfig) {
   // --- Passthrough copies ---
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
   eleventyConfig.addPassthroughCopy({ "src/favicon.png": "favicon.png" });
-  // Copy the whole admin folder (includes config.yml + index.html)
-  eleventyConfig.addPassthroughCopy("src/admin");
+  eleventyConfig.addPassthroughCopy({ "src/_data/djs.json": "manage-data/djs.json" });
+  eleventyConfig.addPassthroughCopy({ "src/_data/shows.json": "manage-data/shows.json" });
+  eleventyConfig.addPassthroughCopy({ "src/_data/schedule.json": "manage-data/schedule.json" });
 
   // --- Filters ---
 

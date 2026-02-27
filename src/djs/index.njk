@@ -1,0 +1,38 @@
+---
+layout: layout-base.njk
+title: DJs
+permalink: /djs/index.html
+---
+
+<section class="hero">
+  <h1>DJ Directory</h1>
+  <p>Humans behind the transmissions.</p>
+</section>
+
+<section class="grid directory-grid">
+  {% set roster = djs.items or [] %}
+  {% for dj in roster %}
+    {% if dj.active != false %}
+      <article class="card profile-card">
+        <div class="profile-head">
+          {% if dj.photo %}
+            <img src="{{ dj.photo }}" alt="{{ dj.name }}" class="profile-thumb" />
+          {% else %}
+            <div class="profile-thumb profile-fallback">{{ (dj.name or '?') | truncate(2, true, '') | upper }}</div>
+          {% endif %}
+          <div>
+            <h2><a href="/djs/{{ dj.slug }}/">{{ dj.name }}</a></h2>
+            {% if dj.tagline %}<p class="meta">{{ dj.tagline }}</p>{% endif %}
+          </div>
+        </div>
+        {% if dj.bio %}<p>{{ dj.bio }}</p>{% endif %}
+      </article>
+    {% endif %}
+  {% endfor %}
+
+  {% if (roster | length) == 0 %}
+    <article class="card">
+      <p class="meta">No DJs added yet.</p>
+    </article>
+  {% endif %}
+</section>

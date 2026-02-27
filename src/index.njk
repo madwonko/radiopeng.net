@@ -49,3 +49,55 @@ title: RadioPeng
     </div>
   </div>
 </section>
+
+<section class="grid" style="margin-top:18px;">
+  <div class="card">
+    <h2>Featured Shows</h2>
+    {% set programList = shows.items or [] %}
+    <div class="article-list">
+      {% for show in programList.slice(0,4) %}
+        {% if show.active != false %}
+          <a class="article" href="/programs/{{ show.slug }}/">
+            <div class="name">{{ show.title }}</div>
+            <div class="pill-row">
+              {% set status = showStatus[show.slug] %}
+              <span class="status-pill {% if status and status.onAir %}live{% else %}off{% endif %}">
+                {% if status %}{{ status.label }}{% else %}Off Air{% endif %}
+              </span>
+              {% if show.schedule %}<span class="mini-pill">{{ show.schedule }}</span>{% endif %}
+              {% if show.genre %}<span class="mini-pill">{{ show.genre }}</span>{% endif %}
+            </div>
+            {% if show.description %}<div class="blurb">{{ show.description }}</div>{% endif %}
+          </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <p class="meta" style="margin-top:10px;"><a href="/programs/">Browse all shows →</a></p>
+  </div>
+
+  <div class="card">
+    <h2>Featured DJs</h2>
+    {% set roster = djs.items or [] %}
+    <div class="article-list">
+      {% for dj in roster.slice(0,4) %}
+        {% if dj.active != false %}
+          <a class="article" href="/djs/{{ dj.slug }}/">
+            <div class="profile-head">
+              {% if dj.photo %}
+                <img src="{{ dj.photo }}" alt="{{ dj.name }}" class="profile-thumb" />
+              {% else %}
+                <div class="profile-thumb profile-fallback">{{ (dj.name or '?') | truncate(2, true, '') | upper }}</div>
+              {% endif %}
+              <div>
+                <div class="name">{{ dj.name }}</div>
+                {% if dj.tagline %}<div class="kicker">{{ dj.tagline }}</div>{% endif %}
+              </div>
+            </div>
+            {% if dj.bio %}<div class="blurb">{{ dj.bio }}</div>{% endif %}
+          </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <p class="meta" style="margin-top:10px;"><a href="/djs/">Browse all DJs →</a></p>
+  </div>
+</section>

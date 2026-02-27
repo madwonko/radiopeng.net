@@ -1,9 +1,10 @@
 ---
 layout: layout-base.njk
-title: Shows
+title: Episodes
+permalink: /episodes/index.html
 ---
 
-<h1>Shows</h1>
+<h1>Episodes</h1>
 
 <div class="grid">
   {% for s in collections.shows | sort(attribute="data.title") %}

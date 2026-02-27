@@ -1,1 +1,31 @@
-{ "items": [] }
+{
+  "items": [
+    {
+      "slug": "madwonko",
+      "name": "MadWonko",
+      "tagline": "Bent frequencies, deep crates, zero autopilot.",
+      "bio": "MadWonko is a sonic shapeshifter on a mission to scramble your brainwaves and reboot your soul. Spinning the strange, the surreal, and the sonically sublime, MadWonko blends eclectic grooves, offbeat rhythms, and musical oddities into a genre-bending journey through sound. If it’s weird, wobbly, or wildly wonderful, it’s in the set. Expect the unexpected—and maybe a kazoo solo.",
+      "photo": "/assets/madwonko.png",
+      "pronouns": "he/him",
+      "location": "New York",
+      "active": true,
+      "social": [
+        {
+          "label": "RadioPeng",
+          "url": "https://www.radiopeng.net"
+        }
+      ]
+    },
+    {
+      "slug": "night-operator",
+      "name": "Night Operator",
+      "tagline": "Ambient fog, tape hiss, and midnight drift.",
+      "bio": "Curates slow-burn sets for late-night listeners and insomniac commuters.",
+      "photo": "/assets/cover-fallback.png",
+      "pronouns": "they/them",
+      "location": "Remote",
+      "active": true,
+      "social": []
+    }
+  ]
+}
