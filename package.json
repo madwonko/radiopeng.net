@@ -2,11 +2,12 @@
   "name": "radiopeng-11ty",
   "version": "1.0.0",
   "private": true,
-	"scripts": {
-	  "dev": "node ./node_modules/@11ty/eleventy/cmd.cjs --serve",
-	  "build": "node ./node_modules/@11ty/eleventy/cmd.cjs",
-	  "prepare": "husky"
-	},
+  "scripts": {
+    "dev": "node ./node_modules/@11ty/eleventy/cmd.cjs --serve",
+    "build": "node ./node_modules/@11ty/eleventy/cmd.cjs",
+    "prepare": "husky",
+    "archive:add": "node tools/add-archive-episode.js"
+  },
   "dependencies": {
     "@11ty/eleventy-fetch": "^5.1.1",
     "@11ty/eleventy-plugin-rss": "^2.0.4",

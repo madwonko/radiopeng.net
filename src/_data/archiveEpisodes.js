@@ -1,7 +1,4 @@
-const fs = require("fs");
-const path = require("path");
-const episodesFeed = require("./episodes");
-const site = require("./site.json");
+const manifest = require("./archive-manifest.json");
 
 function slugify(str) {
   return String(str || "episode")
@@ -13,101 +10,38 @@ function slugify(str) {
     .replace(/-{2,}/g, "-");
 }
 
-function pickAudioUrl(raw = {}) {
-  const e = raw.enclosure;
-  if (Array.isArray(e)) {
-    const first = e.find((x) => x && (x["@_url"] || x.url));
-    if (first) return first["@_url"] || first.url;
-  }
-  if (e && typeof e === "object") return e["@_url"] || e.url || "";
-  return "";
-}
-
 function normalizeAudioUrl(url) {
   if (!url) return "";
-  let out = String(url).trim();
-
-  // Rewrite legacy internal host to public site URL so browser playback works.
-  out = out.replace("http://80.209.241.121:8081", site.url);
-
-  // If feed gives plain HTTP on same domain, upgrade to HTTPS.
-  out = out.replace("http://radiopeng.net", "https://radiopeng.net");
-
-  return out;
-}
-
-function parseFrontMatter(content) {
-  if (!content.startsWith("---")) return {};
-  const end = content.indexOf("\n---", 3);
-  if (end === -1) return {};
-  const fm = content.slice(3, end).split(/\r?\n/);
-  const out = {};
-  for (const line of fm) {
-    const i = line.indexOf(":");
-    if (i === -1) continue;
-    const k = line.slice(0, i).trim();
-    let v = line.slice(i + 1).trim();
-    v = v.replace(/^"|"$/g, "").replace(/^'|'$/g, "");
-    out[k] = v;
-  }
-  return out;
-}
-
-function localFallbackEpisodes() {
-  const dir = path.join(__dirname, "..", "shows");
-  if (!fs.existsSync(dir)) return [];
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".md"));
-  return files.map((f) => {
-    const p = path.join(dir, f);
-    const txt = fs.readFileSync(p, "utf8");
-    const fm = parseFrontMatter(txt);
-    const audioUrl = fm.audio_file ? normalizeAudioUrl(`${site.audioBaseUrl}/${fm.audio_file}`) : "";
-    return {
-      title: fm.title || f.replace(/\.md$/, ""),
-      date: fm.date || "",
-      duration: fm.duration || "",
-      audioUrl,
-      link: "",
-      description: fm.description || "",
-      dj: fm.dj || "",
-      show: fm.show || fm.showSlug || "",
-    };
-  });
+  const u = String(url).trim();
+  if (u.startsWith("http://") || u.startsWith("https://")) return u;
+  return u.startsWith("/") ? u : `/${u}`;
 }
 
 module.exports = async function () {
-  let list = [];
-  try {
-    list = await episodesFeed();
-  } catch (_) {}
-
-  let normalized = (Array.isArray(list) ? list : []).map((it, idx) => {
-    const raw = it?.raw || {};
-    return {
-      title: it?.title || raw?.title || `Episode ${idx + 1}`,
-      date: it?.pubDate || raw?.pubDate || "",
-      duration: it?.duration || raw?.["itunes:duration"] || "",
-      audioUrl: normalizeAudioUrl(pickAudioUrl(raw)),
-      link: it?.link || raw?.link || "",
-      description: raw?.description || raw?.["content:encoded"] || "",
-      dj: raw?.["itunes:author"] || raw?.author || "",
-      show: raw?.["itunes:subtitle"] || "",
-    };
-  });
-
-  if (!normalized.length) normalized = localFallbackEpisodes();
-
+  const src = Array.isArray(manifest?.episodes) ? manifest.episodes : [];
   const seen = new Set();
-  return normalized
-    .map((ep) => {
-      const isoDate = ep.date ? new Date(ep.date) : null;
-      const datePrefix = isoDate && !isNaN(isoDate.getTime()) ? isoDate.toISOString().slice(0, 10) + "-" : "";
-      const base = `${datePrefix}${slugify(ep.title) || "episode"}`;
-      let slug = base;
+
+  return src
+    .map((ep, idx) => {
+      const title = ep?.title || `Episode ${idx + 1}`;
+      const base = ep?.slug ? slugify(ep.slug) : `${(ep?.date || "").slice(0, 10)}-${slugify(title)}`;
+      let slug = base || `episode-${idx + 1}`;
       let n = 2;
       while (seen.has(slug)) slug = `${base}-${n++}`;
       seen.add(slug);
-      return { ...ep, slug };
+
+      return {
+        title,
+        date: ep?.date || "",
+        duration: ep?.duration || "",
+        audioUrl: normalizeAudioUrl(ep?.audioUrl || ""),
+        link: ep?.link || "",
+        description: ep?.description || "",
+        dj: ep?.dj || "",
+        show: ep?.show || "",
+        djSlug: ep?.djSlug || "",
+        slug,
+      };
     })
     .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 };

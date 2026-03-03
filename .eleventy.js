@@ -13,6 +13,7 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/_data/djs.json": "manage-data/djs.json" });
   eleventyConfig.addPassthroughCopy({ "src/_data/shows.json": "manage-data/shows.json" });
   eleventyConfig.addPassthroughCopy({ "src/_data/schedule.json": "manage-data/schedule.json" });
+  eleventyConfig.addPassthroughCopy({ "src/audio": "audio" });
 
   // --- Filters ---
 
