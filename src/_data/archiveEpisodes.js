@@ -23,6 +23,19 @@ function pickAudioUrl(raw = {}) {
   return "";
 }
 
+function normalizeAudioUrl(url) {
+  if (!url) return "";
+  let out = String(url).trim();
+
+  // Rewrite legacy internal host to public site URL so browser playback works.
+  out = out.replace("http://80.209.241.121:8081", site.url);
+
+  // If feed gives plain HTTP on same domain, upgrade to HTTPS.
+  out = out.replace("http://radiopeng.net", "https://radiopeng.net");
+
+  return out;
+}
+
 function parseFrontMatter(content) {
   if (!content.startsWith("---")) return {};
   const end = content.indexOf("\n---", 3);
@@ -48,7 +61,7 @@ function localFallbackEpisodes() {
     const p = path.join(dir, f);
     const txt = fs.readFileSync(p, "utf8");
     const fm = parseFrontMatter(txt);
-    const audioUrl = fm.audio_file ? `${site.audioBaseUrl}/${fm.audio_file}` : "";
+    const audioUrl = fm.audio_file ? normalizeAudioUrl(`${site.audioBaseUrl}/${fm.audio_file}`) : "";
     return {
       title: fm.title || f.replace(/\.md$/, ""),
       date: fm.date || "",
@@ -74,7 +87,7 @@ module.exports = async function () {
       title: it?.title || raw?.title || `Episode ${idx + 1}`,
       date: it?.pubDate || raw?.pubDate || "",
       duration: it?.duration || raw?.["itunes:duration"] || "",
-      audioUrl: pickAudioUrl(raw),
+      audioUrl: normalizeAudioUrl(pickAudioUrl(raw)),
       link: it?.link || raw?.link || "",
       description: raw?.description || raw?.["content:encoded"] || "",
       dj: raw?.["itunes:author"] || raw?.author || "",
