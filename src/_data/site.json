@@ -1,8 +1,8 @@
 {
   "name": "RadioPeng",
   "description": "eclectic transmissions from the penguin belt",
-  "url": "http://80.209.241.121:8081",
-  "audioBaseUrl": "http://80.209.241.121:8081/audio",
+  "url": "https://radiopeng.net",
+  "audioBaseUrl": "https://radiopeng.net/audio",
   "podcastTitle": "RadioPeng Show Archive",
   "podcastDescription": "Recorded shows and transmissions from RadioPeng.",
   "podcastLanguage": "en-us"
