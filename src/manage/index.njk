@@ -6,7 +6,7 @@ permalink: /manage/index.html
 
 <section class="hero">
   <h1>Local Manager</h1>
-  <p>Edit DJs, Shows, and Schedule JSON without Decap.</p>
+  <p>Edit DJs, Shows, Schedule, and compose Articles without Decap.</p>
 </section>
 
 <section class="card">
@@ -57,6 +57,56 @@ permalink: /manage/index.html
   <textarea id="json-schedule" style="width:100%;min-height:320px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea>
 </section>
 
+<section class="card" style="margin-top:14px;">
+  <h2>Article Composer (No Decap)</h2>
+  <p class="meta" style="margin-top:0;">Create a new article markdown file in the same format used by the site. Then download it or save it directly via File Picker.</p>
+
+  <div style="display:grid;gap:10px;grid-template-columns:1fr 1fr;">
+    <label>
+      <div class="meta" style="margin-bottom:4px;">Title</div>
+      <input id="articleTitle" type="text" style="width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" placeholder="My Great Article" />
+    </label>
+    <label>
+      <div class="meta" style="margin-bottom:4px;">Date</div>
+      <input id="articleDate" type="date" style="width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" />
+    </label>
+  </div>
+
+  <label style="display:block;margin-top:10px;">
+    <div class="meta" style="margin-bottom:4px;">Image URL (optional)</div>
+    <input id="articleImage" type="text" style="width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" placeholder="/assets/uploads/my-image.jpg" />
+  </label>
+
+  <label style="display:block;margin-top:10px;">
+    <div class="meta" style="margin-bottom:4px;">Brief description</div>
+    <textarea id="articleDescription" style="width:100%;min-height:84px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" placeholder="1-2 sentence summary shown in article listings and under the title."></textarea>
+  </label>
+
+  <label style="display:block;margin-top:10px;">
+    <div class="meta" style="margin-bottom:4px;">Article body (Markdown)</div>
+    <textarea id="articleBody" style="width:100%;min-height:240px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" placeholder="Write your article in markdown..."></textarea>
+  </label>
+
+  <div class="pill-row" style="margin-top:10px;">
+    <button class="btn" id="articleGenerate">Generate markdown</button>
+    <button class="btn" id="articleDownload">Download .md</button>
+    <button class="btn" id="articleSave">Save via Picker</button>
+    <button class="btn" id="articleServerCmd">Generate server write command</button>
+  </div>
+
+  <div id="articleOut" class="meta" style="margin-top:8px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Fill the fields and generate a file.</div>
+
+  <label style="display:block;margin-top:10px;">
+    <div class="meta" style="margin-bottom:4px;">Server command (run on 192.168.1.80)</div>
+    <textarea id="articleServerCommand" style="width:100%;min-height:180px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea>
+  </label>
+
+  <label style="display:block;margin-top:10px;">
+    <div class="meta" style="margin-bottom:4px;">Generated markdown</div>
+    <textarea id="articleMarkdown" style="width:100%;min-height:260px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea>
+  </label>
+</section>
+
 <script>
 (() => {
   const defs = {
@@ -66,6 +116,7 @@ permalink: /manage/index.html
   };
 
   const out = document.getElementById("validationOut");
+  const articleOut = document.getElementById("articleOut");
 
   async function loadOne(key) {
     const d = defs[key];
@@ -133,7 +184,6 @@ permalink: /manage/index.html
       const d = defs[key];
       if (!d?.el) continue;
 
-      // Convert pasted “smart quotes” and strip control chars that break JSON parsing
       let txt = d.el.value || "";
       txt = txt
         .replace(/[\u2018\u2019]/g, "'")
@@ -143,15 +193,13 @@ permalink: /manage/index.html
       d.el.value = txt;
 
       try {
-        // If JSON is valid, re-serialize to normalize escaping/newlines safely
         const parsed = JSON.parse(d.el.value);
         d.el.value = JSON.stringify(parsed, null, 2);
       } catch (e) {
-        // Keep text as-is for manual fixes if still invalid
       }
     }
 
-    out.textContent = "🧹 Normalization complete. If validation still fails, check for accidental line breaks inside quoted values.";
+    out.textContent = "Normalization complete. If validation still fails, check for accidental line breaks inside quoted values.";
   }
 
   function validateAll() {
@@ -164,7 +212,7 @@ permalink: /manage/index.html
     try { schedule = parseOne("schedule"); } catch (e) { errors.push(`Schedule JSON invalid: ${e.message}`); }
 
     if (errors.length) {
-      out.textContent = `❌ Validation failed\n\n${errors.join("\n")}`;
+      out.textContent = `Validation failed\n\n${errors.join("\n")}`;
       return;
     }
 
@@ -219,11 +267,122 @@ permalink: /manage/index.html
     if (!schedule?.timezone) warnings.push("Schedule timezone missing (recommended: America/New_York)");
 
     if (!warnings.length) {
-      out.textContent = "✅ Validation passed. No issues found.";
+      out.textContent = "Validation passed. No issues found.";
       return;
     }
 
-    out.textContent = `⚠ Validation complete: ${warnings.length} warning(s)\n\n- ${warnings.join("\n- ")}`;
+    out.textContent = `Validation complete: ${warnings.length} warning(s)\n\n- ${warnings.join("\n- ")}`;
+  }
+
+  function slugify(s) {
+    return String(s || "")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-{2,}/g, "-");
+  }
+
+  function escYaml(str) {
+    return String(str || "").replace(/"/g, '\\"');
+  }
+
+  function buildArticleMarkdown() {
+    const title = document.getElementById("articleTitle")?.value?.trim() || "";
+    const date = document.getElementById("articleDate")?.value?.trim() || "";
+    const image = document.getElementById("articleImage")?.value?.trim() || "";
+    const description = document.getElementById("articleDescription")?.value?.trim() || "";
+    const body = document.getElementById("articleBody")?.value || "";
+
+    if (!title) throw new Error("Title is required.");
+    if (!date) throw new Error("Date is required.");
+    if (!description) throw new Error("Brief description is required.");
+    if (!body.trim()) throw new Error("Article body is required.");
+
+    const lines = [
+      "---",
+      `title: \"${escYaml(title)}\"`,
+      `description: \"${escYaml(description)}\"`,
+      `date: ${date}`,
+      "tags: [articles]",
+      "layout: layout-article.njk",
+    ];
+
+    if (image) lines.push(`image: \"${escYaml(image)}\"`);
+
+    lines.push("---", "", body.trim(), "");
+
+    const markdown = lines.join("\n");
+    const filename = `${date}-${slugify(title) || "article"}.md`;
+    return { markdown, filename };
+  }
+
+  function articleGenerate() {
+    try {
+      const { markdown, filename } = buildArticleMarkdown();
+      const outEl = document.getElementById("articleMarkdown");
+      if (outEl) outEl.value = markdown;
+      articleOut.textContent = `Generated ${filename}. Place it in src/articles/`;
+    } catch (e) {
+      articleOut.textContent = `Error: ${e.message}`;
+    }
+  }
+
+  function articleDownload() {
+    try {
+      const { markdown, filename } = buildArticleMarkdown();
+      const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      articleOut.textContent = `Downloaded ${filename}`;
+    } catch (e) {
+      articleOut.textContent = `Error: ${e.message}`;
+    }
+  }
+
+
+  function articleServerCmd() {
+    try {
+      const { markdown, filename } = buildArticleMarkdown();
+      const safe = markdown.replace(/EOF/g, "E_O_F");
+      const cmd = [
+        "cd ~/shared/radiopeng.net",
+        "cat > src/articles/" + filename + " <<'EOF'",
+        safe,
+        "EOF",
+        "npm run build"
+      ].join("\n");
+      const cmdEl = document.getElementById("articleServerCommand");
+      if (cmdEl) cmdEl.value = cmd;
+      articleOut.textContent = `Server command generated for ${filename}`;
+    } catch (e) {
+      articleOut.textContent = `Error: ${e.message}`;
+    }
+  }
+
+  async function articleSave() {
+    if (!window.showSaveFilePicker) {
+      articleOut.textContent = "File Picker not supported here. Use Download .md instead.";
+      return;
+    }
+    try {
+      const { markdown, filename } = buildArticleMarkdown();
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: "Markdown", accept: { "text/markdown": [".md"] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(markdown);
+      await writable.close();
+      articleOut.textContent = `Saved ${filename}`;
+    } catch (e) {
+      if (e?.name === "AbortError") return;
+      articleOut.textContent = `Save failed: ${e.message}`;
+    }
   }
 
   document.querySelectorAll("[data-load]").forEach(btn => btn.addEventListener("click", () => loadOne(btn.dataset.load)));
@@ -232,6 +391,18 @@ permalink: /manage/index.html
   document.querySelectorAll("[data-save]").forEach(btn => btn.addEventListener("click", () => saveViaPicker(btn.dataset.save)));
   document.getElementById("validateAll")?.addEventListener("click", validateAll);
   document.getElementById("normalizeAll")?.addEventListener("click", normalizeTextFields);
+
+  document.getElementById("articleGenerate")?.addEventListener("click", articleGenerate);
+  document.getElementById("articleDownload")?.addEventListener("click", articleDownload);
+  document.getElementById("articleSave")?.addEventListener("click", articleSave);
+  document.getElementById("articleServerCmd")?.addEventListener("click", articleServerCmd);
+
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const dateInput = document.getElementById("articleDate");
+  if (dateInput && !dateInput.value) dateInput.value = `${yyyy}-${mm}-${dd}`;
 
   loadOne("djs");
   loadOne("shows");

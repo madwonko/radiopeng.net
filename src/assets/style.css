@@ -1936,3 +1936,63 @@ body.experimental-site .main a:not(.btn):not(.pill):not(.side-link) {
 .show-card.genre-dub {
   box-shadow: 0 12px 34px rgba(106, 208, 139, .16), inset 0 0 0 1px rgba(255,255,255,.03);
 }
+
+.archive-controls input {
+  width: 100%;
+  background: #00000040;
+  color: #fff;
+  border: 1px solid #ffffff2e;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.archive-controls input::placeholder {
+  color: #e9edf5aa;
+}
+
+.archive-control-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+}
+
+.archive-item .meta {
+  margin-top: 2px;
+}
+
+.archive-item .blurb {
+  margin-top: 6px;
+}
+
+.archive-pager {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 980px) {
+  .archive-control-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .archive-control-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.archive-controls input,
+.archive-controls select {
+  width: 100%;
+  background: #00000040;
+  color: #fff;
+  border: 1px solid #ffffff2e;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.archive-controls select option {
+  background: #10131b;
+  color: #fff;
+}

@@ -1,0 +1,37 @@
+---
+layout: layout-base.njk
+pagination:
+  data: archiveEpisodes
+  size: 1
+  alias: episode
+permalink: "/archive/{{ episode.slug }}/index.html"
+---
+
+<section class="hero">
+  <h1>{{ episode.title }}</h1>
+  <p class="meta">{% if episode.date %}{{ episode.date | readableDate }}{% endif %}{% if episode.duration %} • {{ episode.duration }}{% endif %}{% if episode.show %} • {{ episode.show }}{% endif %}{% if episode.dj %} • DJ: {{ episode.dj }}{% endif %}</p>
+</section>
+
+<section class="card">
+  {% if episode.audioUrl %}
+    <audio controls preload="none" style="width:100%;">
+      <source src="{{ episode.audioUrl }}" type="audio/mpeg" />
+      Your browser does not support audio.
+    </audio>
+    <p class="meta" style="margin-top:10px;"><a href="{{ episode.audioUrl }}">Download audio</a></p>
+  {% elif episode.link %}
+    <p><a href="{{ episode.link }}">Open original episode link</a></p>
+  {% else %}
+    <p class="meta">No audio source linked for this episode yet.</p>
+  {% endif %}
+</section>
+
+{% if episode.description %}
+<section class="card" style="margin-top:14px;">
+  {{ episode.description | safe }}
+</section>
+{% endif %}
+
+<section class="card" style="margin-top:14px;">
+  <a href="/archive/">← Back to archive</a>
+</section>

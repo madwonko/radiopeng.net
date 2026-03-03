@@ -1,0 +1,103 @@
+---
+layout: layout-base.njk
+title: Show Archive
+pagination:
+  data: archiveEpisodes
+  size: 20
+  alias: pageEpisodes
+permalink: "{% if pagination.pageNumber == 0 %}/archive/index.html{% else %}/archive/page/{{ pagination.pageNumber + 1 }}/index.html{% endif %}"
+---
+
+{% set allShows = [] %}
+{% set allDjs = [] %}
+{% set allYears = [] %}
+{% for ep in archiveEpisodes %}
+  {% if ep.show and (ep.show not in allShows) %}{% set allShows = (allShows.concat([ep.show])) %}{% endif %}
+  {% if ep.dj and (ep.dj not in allDjs) %}{% set allDjs = (allDjs.concat([ep.dj])) %}{% endif %}
+  {% if ep.date %}
+    {% set y = ep.date | string | truncate(4, true, '') %}
+    {% if y and (y not in allYears) %}{% set allYears = (allYears.concat([y])) %}{% endif %}
+  {% endif %}
+{% endfor %}
+
+<section class="hero">
+  <h1>Show Archive</h1>
+  <p>Browse past episodes and listen back.</p>
+</section>
+
+<section class="card archive-controls" style="margin-bottom:14px;">
+  <div class="archive-control-grid">
+    <input id="archiveSearch" type="text" placeholder="Search episodes..." />
+
+    <select id="archiveShow">
+      <option value="">All shows</option>
+      {% for show in allShows | sort %}
+        <option value="{{ show | lower }}">{{ show }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="archiveDj">
+      <option value="">All DJs</option>
+      {% for dj in allDjs | sort %}
+        <option value="{{ dj | lower }}">{{ dj }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="archiveYear">
+      <option value="">All years</option>
+      {% for year in allYears | sort | reverse %}
+        <option value="{{ year }}">{{ year }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</section>
+
+<section class="card">
+  <div class="article-list" id="archiveList">
+    {% for ep in pageEpisodes %}
+      {% set year = ep.date | string | truncate(4, true, '') %}
+      <article class="article archive-item" data-search="{{ (ep.title ~ ' ' ~ ep.description ~ ' ' ~ ep.show ~ ' ' ~ ep.dj) | lower }}" data-show="{{ ep.show | lower }}" data-dj="{{ ep.dj | lower }}" data-year="{{ year }}">
+        <a class="name" href="/archive/{{ ep.slug }}/">{{ ep.title }}</a>
+        <div class="meta">{% if ep.date %}{{ ep.date | readableDate }}{% endif %}{% if ep.duration %} • {{ ep.duration }}{% endif %}{% if ep.show %} • {{ ep.show }}{% endif %}{% if ep.dj %} • DJ: {{ ep.dj }}{% endif %}</div>
+        {% if ep.description %}<div class="blurb">{{ ep.description | safe }}</div>{% endif %}
+      </article>
+    {% endfor %}
+  </div>
+
+  <div class="pill-row archive-pager" style="margin-top:14px;">
+    {% if pagination.href.previous %}
+      <a class="pill" href="{{ pagination.href.previous }}">← Newer</a>
+    {% endif %}
+    <span class="pill">Page {{ pagination.pageNumber + 1 }} of {{ pagination.pages.length }}</span>
+    {% if pagination.href.next %}
+      <a class="pill" href="{{ pagination.href.next }}">Older →</a>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+(() => {
+  const q = document.getElementById('archiveSearch');
+  const s = document.getElementById('archiveShow');
+  const d = document.getElementById('archiveDj');
+  const y = document.getElementById('archiveYear');
+  const items = Array.from(document.querySelectorAll('.archive-item'));
+
+  function apply() {
+    const qv = (q?.value || '').toLowerCase().trim();
+    const sv = (s?.value || '').toLowerCase().trim();
+    const dv = (d?.value || '').toLowerCase().trim();
+    const yv = (y?.value || '').toLowerCase().trim();
+    items.forEach((el) => {
+      const okQ = !qv || (el.dataset.search || '').includes(qv);
+      const okS = !sv || (el.dataset.show || '') === sv;
+      const okD = !dv || (el.dataset.dj || '') === dv;
+      const okY = !yv || (el.dataset.year || '') === yv;
+      el.style.display = (okQ && okS && okD && okY) ? '' : 'none';
+    });
+  }
+
+  [q,s,d,y].forEach((el) => el && el.addEventListener('input', apply));
+  [s,d,y].forEach((el) => el && el.addEventListener('change', apply));
+})();
+</script>

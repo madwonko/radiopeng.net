@@ -101,3 +101,19 @@ title: RadioPeng
     <p class="meta" style="margin-top:10px;"><a href="/djs/">Browse all DJs →</a></p>
   </div>
 </section>
+
+<section class="card" style="margin-top:18px;">
+  <h2>Latest Episodes</h2>
+  <div class="article-list">
+    {% for ep in archiveEpisodes.slice(0,5) %}
+      <a class="article" href="/archive/{{ ep.slug }}/">
+        <div class="kicker">{% if ep.date %}{{ ep.date | readableDate }}{% endif %}{% if ep.duration %} • {{ ep.duration }}{% endif %}</div>
+        <div class="name">{{ ep.title }}</div>
+        {% if ep.show or ep.dj %}
+          <div class="meta">{% if ep.show %}{{ ep.show }}{% endif %}{% if ep.dj %} • DJ: {{ ep.dj }}{% endif %}</div>
+        {% endif %}
+      </a>
+    {% endfor %}
+  </div>
+  <p class="meta" style="margin-top:10px;"><a href="/archive/">Browse full archive →</a></p>
+</section>
