@@ -10,16 +10,22 @@ const PORT = process.env.STUDIO_API_PORT || 8787;
 const TOKEN = process.env.STUDIO_UPLOAD_TOKEN || '';
 
 const manifestPath = path.join(ROOT, 'src', '_data', 'archive-manifest.json');
+const djsPath = path.join(ROOT, 'src', '_data', 'djs.json');
 const audioRoot = path.join(ROOT, 'src', 'audio');
+const uploadsRoot = path.join(ROOT, 'src', 'assets', 'uploads');
 
 function slugify(str) {
-  return String(str || 'episode')
+  return String(str || 'item')
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .replace(/-{2,}/g, '-');
+}
+
+function runBuild(cb) {
+  exec('npm run build', { cwd: ROOT }, (err, stdout, stderr) => cb(err, stdout, stderr));
 }
 
 function requireToken(req, res, next) {
@@ -35,10 +41,60 @@ const upload = multer({
 });
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
-app.get('/health', (_req, res) => {
-  res.json({ ok: true });
+app.get('/health', (_req, res) => res.json({ ok: true }));
+
+app.post('/api/upload-image', requireToken, upload.single('image'), (req, res) => {
+  try {
+    const f = req.file;
+    if (!f) return res.status(400).json({ ok: false, error: 'Missing image file' });
+
+    const ext = (path.extname(f.originalname || '').toLowerCase() || '.jpg');
+    if (!['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext)) {
+      return res.status(400).json({ ok: false, error: 'Unsupported image type' });
+    }
+
+    const folder = slugify(req.body.folder || 'general');
+    const base = slugify(req.body.name || path.basename(f.originalname, ext) || 'image');
+    const stamp = Date.now();
+
+    const targetDir = path.join(uploadsRoot, folder);
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    const filename = `${base}-${stamp}${ext}`;
+    const targetPath = path.join(targetDir, filename);
+    fs.writeFileSync(targetPath, f.buffer);
+
+    const url = `/assets/uploads/${folder}/${filename}`;
+    const rebuild = String(req.body.rebuild || 'true') !== 'false';
+
+    if (!rebuild) return res.json({ ok: true, url });
+
+    runBuild((err, _stdout, stderr) => {
+      if (err) return res.status(500).json({ ok: false, error: 'Build failed after image upload', details: stderr || String(err) });
+      return res.json({ ok: true, url, build: 'ok' });
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post('/api/save-djs', requireToken, (req, res) => {
+  try {
+    const items = req.body?.items;
+    if (!Array.isArray(items)) return res.status(400).json({ ok: false, error: 'items must be an array' });
+
+    const payload = { items };
+    fs.writeFileSync(djsPath, JSON.stringify(payload, null, 2) + '\n');
+
+    runBuild((err, _stdout, stderr) => {
+      if (err) return res.status(500).json({ ok: false, error: 'Build failed after saving DJs', details: stderr || String(err) });
+      return res.json({ ok: true, count: items.length, build: 'ok' });
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 app.post('/api/upload', requireToken, upload.single('audio'), (req, res) => {
@@ -69,9 +125,7 @@ app.post('/api/upload', requireToken, upload.single('audio'), (req, res) => {
     fs.writeFileSync(targetPath, f.buffer);
 
     let manifest = { episodes: [] };
-    if (fs.existsSync(manifestPath)) {
-      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    }
+    if (fs.existsSync(manifestPath)) manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     if (!Array.isArray(manifest.episodes)) manifest.episodes = [];
 
     manifest.episodes = manifest.episodes.filter((e) => e.slug !== slug);
@@ -89,10 +143,8 @@ app.post('/api/upload', requireToken, upload.single('audio'), (req, res) => {
     manifest.episodes.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 
-    exec('npm run build', { cwd: ROOT }, (err, stdout, stderr) => {
-      if (err) {
-        return res.status(500).json({ ok: false, error: 'Build failed', details: stderr || String(err) });
-      }
+    runBuild((err, _stdout, stderr) => {
+      if (err) return res.status(500).json({ ok: false, error: 'Build failed', details: stderr || String(err) });
       return res.json({ ok: true, slug, audioUrl: `/audio/${safeDj}/${filename}`, build: 'ok' });
     });
   } catch (e) {
