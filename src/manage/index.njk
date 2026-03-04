@@ -67,6 +67,38 @@ permalink: /manage/index.html
   <div id="djOut" class="meta" style="margin-top:8px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Ready.</div>
 </section>
 
+
+<section class="card" style="margin-top:14px;">
+  <h2>Shows Manager</h2>
+  <p class="meta">Create/update show cards and upload show artwork.</p>
+
+  <div class="archive-control-grid">
+    <label><div class="meta">Select Show</div><select id="showSelect"></select></label>
+    <label><div class="meta">Slug</div><input id="showSlug" type="text" placeholder="wonko-odd-hours" /></label>
+    <label><div class="meta">Title</div><input id="showTitle" type="text" placeholder="Wonko’s Odd Hours" /></label>
+    <label><div class="meta">DJ Slug</div><input id="showDjSlug" type="text" placeholder="madwonko" /></label>
+  </div>
+
+  <label style="display:block;margin-top:10px;"><div class="meta">Description</div><textarea id="showDescription" style="width:100%;min-height:100px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea></label>
+
+  <div class="archive-control-grid" style="margin-top:10px;">
+    <label><div class="meta">Genre</div><input id="showGenre" type="text" placeholder="Ambient / Downtempo" /></label>
+    <label><div class="meta">Schedule</div><input id="showSchedule" type="text" placeholder="Sundays 11:00 PM–1:00 AM ET" /></label>
+    <label><div class="meta">Artwork URL</div><input id="showArtwork" type="text" placeholder="/assets/uploads/shows/art.jpg" /></label>
+    <label><div class="meta">Active</div><select id="showActive"><option value="true">true</option><option value="false">false</option></select></label>
+  </div>
+
+  <label style="display:block;margin-top:10px;"><div class="meta">Upload Show Artwork</div><input id="showArtworkFile" type="file" accept="image/*" /></label>
+
+  <div class="pill-row" style="margin-top:10px;">
+    <button class="btn" id="showNew">New Show</button>
+    <button class="btn" id="showUploadArtwork">Upload artwork</button>
+    <button class="btn" id="showSave">Save Show</button>
+  </div>
+
+  <div id="showOut" class="meta" style="margin-top:8px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Ready.</div>
+</section>
+
 <section class="card" style="margin-top:14px;">
   <h2>Article Composer</h2>
 
@@ -99,6 +131,8 @@ permalink: /manage/index.html
   const djOut = byId('djOut');
   const articleOut = byId('articleOut');
   let djsData = { items: [] };
+  let showsData = { items: [] };
+  const showOut = byId('showOut');
 
   function slugify(s) {
     return String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-{2,}/g,'-');
@@ -110,6 +144,13 @@ permalink: /manage/index.html
 
   function token() {
     return byId('studioToken').value || localStorage.getItem('studioUploadToken') || '';
+  }
+
+  async function loadShows() {
+    const res = await fetch('/manage-data/shows.json', { cache: 'no-store' });
+    showsData = await res.json();
+    if (!Array.isArray(showsData.items)) showsData.items = [];
+    renderShowSelect();
   }
 
   async function loadDjs() {
@@ -130,6 +171,31 @@ permalink: /manage/index.html
       if (selected && selected === o.value) o.selected = true;
       sel.appendChild(o);
     }
+  }
+
+  function renderShowSelect(selected='') {
+    const sel = byId('showSelect');
+    if (!sel) return;
+    sel.innerHTML = "";
+    const opts = [{ slug: '', title: '— Select Show —' }, ...showsData.items];
+    for (const sh of opts) {
+      const o = document.createElement('option');
+      o.value = sh.slug || '';
+      o.textContent = sh.title ? `${sh.title} (${sh.slug})` : '— Select Show —';
+      if (selected && selected === o.value) o.selected = true;
+      sel.appendChild(o);
+    }
+  }
+
+  function fillShowForm(sh) {
+    byId('showSlug').value = sh?.slug || '';
+    byId('showTitle').value = sh?.title || '';
+    byId('showDjSlug').value = sh?.djSlug || '';
+    byId('showDescription').value = sh?.description || '';
+    byId('showGenre').value = sh?.genre || '';
+    byId('showSchedule').value = sh?.schedule || '';
+    byId('showArtwork').value = sh?.artwork || '';
+    byId('showActive').value = String(sh?.active !== false);
   }
 
   function fillDjForm(dj) {
@@ -162,6 +228,19 @@ permalink: /manage/index.html
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || `Upload failed (${res.status})`);
     return data.url;
+  }
+
+  async function saveShowsRemote() {
+    const t = token();
+    if (!t) throw new Error('Missing Studio API token.');
+    const res = await fetch('/studio/api/save-shows', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
+      body: JSON.stringify({ items: showsData.items })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || `Save failed (${res.status})`);
+    return data;
   }
 
   async function saveDjsRemote() {
@@ -260,6 +339,56 @@ permalink: /manage/index.html
     }
   });
 
+  byId('showSelect').addEventListener('change', (e) => {
+    const sh = showsData.items.find(x => x.slug === e.target.value);
+    fillShowForm(sh || {});
+  });
+
+  byId('showNew').addEventListener('click', () => {
+    byId('showSelect').value = '';
+    fillShowForm({ active: true });
+    showOut.textContent = 'New show form ready.';
+  });
+
+  byId('showUploadArtwork').addEventListener('click', async () => {
+    try {
+      const file = byId('showArtworkFile').files[0];
+      const nameHint = byId('showTitle').value || byId('showSlug').value || 'show-artwork';
+      const url = await uploadImage(file, 'shows', nameHint);
+      byId('showArtwork').value = url;
+      showOut.textContent = `Artwork uploaded: ${url}`;
+    } catch (e) {
+      showOut.textContent = `Upload error: ${e.message}`;
+    }
+  });
+
+  byId('showSave').addEventListener('click', async () => {
+    try {
+      const slug = slugify(byId('showSlug').value || byId('showTitle').value);
+      if (!slug) throw new Error('Show slug or title required.');
+      const item = {
+        slug,
+        title: byId('showTitle').value.trim(),
+        description: byId('showDescription').value.trim(),
+        djSlug: byId('showDjSlug').value.trim(),
+        genre: byId('showGenre').value.trim(),
+        schedule: byId('showSchedule').value.trim(),
+        artwork: byId('showArtwork').value.trim(),
+        active: byId('showActive').value === 'true',
+      };
+
+      const idx = showsData.items.findIndex(x => x.slug === slug);
+      if (idx >= 0) showsData.items[idx] = { ...showsData.items[idx], ...item };
+      else showsData.items.push(item);
+
+      await saveShowsRemote();
+      renderShowSelect(slug);
+      showOut.textContent = `Saved show '${item.title || slug}' and rebuilt site.`;
+    } catch (e) {
+      showOut.textContent = `Save error: ${e.message}`;
+    }
+  });
+
   byId('articleUploadImage').addEventListener('click', async () => {
     try {
       const file = byId('articleImageFile').files[0];
@@ -303,5 +432,6 @@ permalink: /manage/index.html
   if (saved) byId('studioToken').value = saved;
 
   loadDjs();
+  loadShows();
 })();
 </script>
