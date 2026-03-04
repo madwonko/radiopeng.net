@@ -6,13 +6,16 @@
     "dev": "node ./node_modules/@11ty/eleventy/cmd.cjs --serve",
     "build": "node ./node_modules/@11ty/eleventy/cmd.cjs",
     "prepare": "husky",
-    "archive:add": "node tools/add-archive-episode.js"
+    "archive:add": "node tools/add-archive-episode.js",
+    "studio:api": "node tools/studio-api.js"
   },
   "dependencies": {
     "@11ty/eleventy-fetch": "^5.1.1",
     "@11ty/eleventy-plugin-rss": "^2.0.4",
     "fast-xml-parser": "^5.3.3",
-    "luxon": "^3.7.2"
+    "luxon": "^3.7.2",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.1.2",

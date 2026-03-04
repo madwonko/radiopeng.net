@@ -1,0 +1,105 @@
+#!/usr/bin/env node
+const express = require('express');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
+
+const ROOT = process.cwd();
+const PORT = process.env.STUDIO_API_PORT || 8787;
+const TOKEN = process.env.STUDIO_UPLOAD_TOKEN || '';
+
+const manifestPath = path.join(ROOT, 'src', '_data', 'archive-manifest.json');
+const audioRoot = path.join(ROOT, 'src', 'audio');
+
+function slugify(str) {
+  return String(str || 'episode')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
+}
+
+function requireToken(req, res, next) {
+  if (!TOKEN) return res.status(500).json({ ok: false, error: 'Server token not configured' });
+  const token = req.get('x-studio-token') || '';
+  if (token !== TOKEN) return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  next();
+}
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 350 * 1024 * 1024 },
+});
+
+const app = express();
+app.use(express.json());
+
+app.get('/health', (_req, res) => {
+  res.json({ ok: true });
+});
+
+app.post('/api/upload', requireToken, upload.single('audio'), (req, res) => {
+  try {
+    const f = req.file;
+    if (!f) return res.status(400).json({ ok: false, error: 'Missing audio file' });
+
+    const { djSlug, dj, show, title, date, duration, description } = req.body;
+    for (const k of ['djSlug', 'dj', 'show', 'title', 'date']) {
+      if (!req.body[k]) return res.status(400).json({ ok: false, error: `Missing ${k}` });
+    }
+
+    const ext = (path.extname(f.originalname || '').toLowerCase() || '.mp3');
+    if (!['.mp3', '.m4a', '.ogg', '.wav'].includes(ext)) {
+      return res.status(400).json({ ok: false, error: 'Unsupported file type' });
+    }
+
+    const safeDj = slugify(djSlug);
+    const safeTitle = slugify(title);
+    const safeDate = String(date).slice(0, 10);
+    const slug = `${safeDate}-${safeTitle}`;
+
+    const targetDir = path.join(audioRoot, safeDj);
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    const filename = `${safeDate}-${safeTitle}${ext}`;
+    const targetPath = path.join(targetDir, filename);
+    fs.writeFileSync(targetPath, f.buffer);
+
+    let manifest = { episodes: [] };
+    if (fs.existsSync(manifestPath)) {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    }
+    if (!Array.isArray(manifest.episodes)) manifest.episodes = [];
+
+    manifest.episodes = manifest.episodes.filter((e) => e.slug !== slug);
+    manifest.episodes.push({
+      slug,
+      title,
+      date: safeDate,
+      duration: duration || '',
+      description: description || '',
+      dj,
+      show,
+      djSlug: safeDj,
+      audioUrl: `/audio/${safeDj}/${filename}`,
+    });
+    manifest.episodes.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+
+    exec('npm run build', { cwd: ROOT }, (err, stdout, stderr) => {
+      if (err) {
+        return res.status(500).json({ ok: false, error: 'Build failed', details: stderr || String(err) });
+      }
+      return res.json({ ok: true, slug, audioUrl: `/audio/${safeDj}/${filename}`, build: 'ok' });
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Studio API listening on http://127.0.0.1:${PORT}`);
+});

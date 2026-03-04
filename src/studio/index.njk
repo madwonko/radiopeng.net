@@ -6,12 +6,10 @@ permalink: /studio/index.html
 
 <section class="hero">
   <h1>Studio Upload</h1>
-  <p>Create an archive entry command for DJ episode uploads. (Protected area recommended)</p>
+  <p>Upload archived shows with metadata.</p>
 </section>
 
 <section class="card">
-  <p class="meta">This page generates a command to run on the server. It copies audio into <code>src/audio/&lt;dj-slug&gt;/</code> and updates <code>src/_data/archive-manifest.json</code>.</p>
-
   <div class="archive-control-grid">
     <label><div class="meta">DJ Slug</div><input id="djSlug" type="text" placeholder="madwonko" /></label>
     <label><div class="meta">DJ Name</div><input id="djName" type="text" placeholder="MadWonko" /></label>
@@ -19,52 +17,71 @@ permalink: /studio/index.html
     <label><div class="meta">Date</div><input id="epDate" type="date" /></label>
   </div>
 
-  <label style="display:block;margin-top:10px;"><div class="meta">Episode Title</div><input id="epTitle" type="text" placeholder="Tape Loops and Night Signals" style="width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" /></label>
+  <label style="display:block;margin-top:10px;"><div class="meta">Episode Title</div><input id="epTitle" type="text" style="width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" /></label>
   <label style="display:block;margin-top:10px;"><div class="meta">Duration (optional)</div><input id="epDuration" type="text" placeholder="01:59:22" style="width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" /></label>
   <label style="display:block;margin-top:10px;"><div class="meta">Description (optional)</div><textarea id="epDesc" style="width:100%;min-height:90px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea></label>
-  <label style="display:block;margin-top:10px;"><div class="meta">Server path to audio file (already uploaded)</div><input id="audioPath" type="text" placeholder="/home/dj/uploads/my-episode.mp3" style="width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" /></label>
+  <label style="display:block;margin-top:10px;"><div class="meta">Audio File</div><input id="audioFile" type="file" accept="audio/*" /></label>
+  <label style="display:block;margin-top:10px;"><div class="meta">Studio API Token</div><input id="studioToken" type="password" placeholder="Set once, stored in this browser" style="width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" /></label>
 
   <div class="pill-row" style="margin-top:10px;">
-    <button class="btn" id="buildCmd">Generate command</button>
+    <button class="btn" id="saveToken">Save Token</button>
+    <button class="btn" id="uploadBtn">Upload + Publish</button>
   </div>
 
-  <label style="display:block;margin-top:10px;"><div class="meta">Run this on server (repo root)</div><textarea id="cmdOut" style="width:100%;min-height:180px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea></label>
+  <div id="uploadOut" class="meta" style="margin-top:10px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Ready.</div>
 </section>
 
 <script>
 (() => {
   const ids = (id) => document.getElementById(id);
-  const q = (s) => JSON.stringify(String(s || ""));
+  const out = ids('uploadOut');
 
   const d = new Date();
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth()+1).padStart(2,'0');
   const dd = String(d.getDate()).padStart(2,'0');
-  if (ids('epDate')) ids('epDate').value = `${yyyy}-${mm}-${dd}`;
+  ids('epDate').value = `${yyyy}-${mm}-${dd}`;
 
-  ids('buildCmd')?.addEventListener('click', () => {
-    const djSlug = ids('djSlug')?.value?.trim();
-    const dj = ids('djName')?.value?.trim();
-    const show = ids('showName')?.value?.trim();
-    const title = ids('epTitle')?.value?.trim();
-    const date = ids('epDate')?.value?.trim();
-    const duration = ids('epDuration')?.value?.trim();
-    const description = ids('epDesc')?.value?.trim();
-    const audio = ids('audioPath')?.value?.trim();
+  const saved = localStorage.getItem('studioUploadToken') || '';
+  if (saved) ids('studioToken').value = saved;
 
-    if (!djSlug || !dj || !show || !title || !date || !audio) {
-      ids('cmdOut').value = 'Please fill DJ Slug, DJ Name, Show Name, Episode Title, Date, and Audio Path.';
-      return;
+  ids('saveToken')?.addEventListener('click', () => {
+    localStorage.setItem('studioUploadToken', ids('studioToken').value || '');
+    out.textContent = 'Token saved in this browser.';
+  });
+
+  ids('uploadBtn')?.addEventListener('click', async () => {
+    const file = ids('audioFile').files[0];
+    const token = ids('studioToken').value || localStorage.getItem('studioUploadToken') || '';
+    if (!file) return out.textContent = 'Please choose an audio file.';
+    if (!token) return out.textContent = 'Missing token. Save API token first.';
+
+    const fd = new FormData();
+    fd.append('audio', file);
+    fd.append('djSlug', ids('djSlug').value.trim());
+    fd.append('dj', ids('djName').value.trim());
+    fd.append('show', ids('showName').value.trim());
+    fd.append('title', ids('epTitle').value.trim());
+    fd.append('date', ids('epDate').value.trim());
+    fd.append('duration', ids('epDuration').value.trim());
+    fd.append('description', ids('epDesc').value.trim());
+
+    out.textContent = 'Uploading and building… this can take a minute.';
+    try {
+      const res = await fetch('/studio/api/upload', {
+        method: 'POST',
+        headers: { 'x-studio-token': token },
+        body: fd
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        out.textContent = `Upload failed: ${data.error || res.status}`;
+        return;
+      }
+      out.textContent = `Published ✅\nSlug: ${data.slug}\nAudio: ${data.audioUrl}`;
+    } catch (e) {
+      out.textContent = `Upload error: ${e.message}`;
     }
-
-    const cmd = [
-      'cd /var/www/radiopeng',
-      `node tools/add-archive-episode.js --djSlug ${q(djSlug)} --dj ${q(dj)} --show ${q(show)} --title ${q(title)} --date ${q(date)} --audio ${q(audio)}${duration ? ` --duration ${q(duration)}` : ''}${description ? ` --description ${q(description)}` : ''}`,
-      'npm run build',
-      '# then commit/push if desired'
-    ].join('\n');
-
-    ids('cmdOut').value = cmd;
   });
 })();
 </script>
