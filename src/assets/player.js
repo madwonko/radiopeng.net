@@ -204,15 +204,23 @@
       }
 
       // Optional: show/program name if provided
-      const showTitle =
-        safeTrim(data?.now_playing?.sh_id) || // sometimes numeric, not useful
-        safeTrim(data?.now_playing?.playlist) ||
-        safeTrim(data?.playing_next?.playlist) ||
-        safeTrim(data?.station?.name);
+      const rawShowCandidates = [
+        safeTrim(data?.now_playing?.playlist),
+        safeTrim(data?.playing_next?.playlist),
+        safeTrim(data?.live?.streamer_name),
+        safeTrim(data?.station?.name),
+      ];
+
+      const showTitle = rawShowCandidates.find((v) => {
+        if (!v) return false;
+        const low = v.toLowerCase();
+        if (low === "radiopeng") return false;
+        if (/^\d+$/.test(v)) return false;
+        return true;
+      }) || "";
 
       if (npShow) {
-        // If you have a better show field, swap it here
-        if (showTitle && showTitle.toLowerCase() !== "radiopeng") {
+        if (showTitle) {
           npShow.textContent = showTitle;
           setHidden(npShow, false);
         } else {
