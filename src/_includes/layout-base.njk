@@ -98,14 +98,22 @@
           </div>
         </div>
 
+        <div class="now-playing-ribbon next-show-ribbon">
+          <div class="ticker">
+            {% if upNext %}
+              <span id="nextShowText">⏭ Next Show: {{ upNext.show }}{% if upNext.day %} · {{ upNext.day }}{% endif %}{% if upNext.start and upNext.end %} · {{ upNext.start }}–{{ upNext.end }}{% endif %}{% if upNext.dj %} · DJ: {{ upNext.dj }}{% endif %}</span>
+            {% else %}
+              <span id="nextShowText">⏭ Next Show: schedule pending</span>
+            {% endif %}
+          </div>
+        </div>
+
         {# NOTE: your banner block had a stray {% endif %} when commented.
            Keeping your original intent but removing the orphan endif. #}
 
         {% if page.url == "/" %}
           {% include "home-excerpt.njk" %}
         {% endif %}
-
-        {% include "upcoming-shows.njk" %}
 
         {{ content | safe }}
       </main>

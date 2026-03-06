@@ -1996,3 +1996,14 @@ body.experimental-site .main a:not(.btn):not(.pill):not(.side-link) {
   background: #10131b;
   color: #fff;
 }
+
+
+.next-show-ribbon {
+  margin-top: 6px;
+  background: linear-gradient(90deg, rgba(82,131,230,.22), rgba(82,131,230,.08));
+  border-color: rgba(159,214,255,.28);
+}
+
+.next-show-ribbon .ticker {
+  animation-duration: 30s;
+}
