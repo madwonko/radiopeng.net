@@ -99,6 +99,39 @@ permalink: /manage/index.html
   <div id="showOut" class="meta" style="margin-top:8px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Ready.</div>
 </section>
 
+
+<section class="card" style="margin-top:14px;">
+  <h2>Schedule Manager</h2>
+  <p class="meta">Manage weekly schedule slots and assign them to shows.</p>
+
+  <div class="archive-control-grid">
+    <label><div class="meta">Select Slot</div><select id="scheduleSelect"></select></label>
+    <label><div class="meta">Day</div>
+      <select id="slotDay">
+        <option>Sun</option><option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option><option>Sat</option>
+      </select>
+    </label>
+    <label><div class="meta">Start (HH:MM)</div><input id="slotStart" type="text" placeholder="20:00" /></label>
+    <label><div class="meta">End (HH:MM)</div><input id="slotEnd" type="text" placeholder="22:00" /></label>
+  </div>
+
+  <div class="archive-control-grid" style="margin-top:10px;">
+    <label><div class="meta">Show Slug</div><select id="slotShowSlug"></select></label>
+    <label><div class="meta">Show Title Override (optional)</div><input id="slotShowTitle" type="text" placeholder="Wonko’s Odd Hours" /></label>
+    <label><div class="meta">Timezone</div><input id="scheduleTimezone" type="text" placeholder="America/New_York" /></label>
+    <label><div class="meta">Row Number</div><input id="slotIndex" type="text" readonly /></label>
+  </div>
+
+  <div class="pill-row" style="margin-top:10px;">
+    <button class="btn" id="slotNew">New Slot</button>
+    <button class="btn" id="slotSave">Save Slot</button>
+    <button class="btn" id="slotDelete">Delete Slot</button>
+    <button class="btn" id="scheduleSaveAll">Save Schedule</button>
+  </div>
+
+  <div id="scheduleOut" class="meta" style="margin-top:8px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Ready.</div>
+</section>
+
 <section class="card" style="margin-top:14px;">
   <h2>Article Composer</h2>
 
@@ -133,6 +166,8 @@ permalink: /manage/index.html
   let djsData = { items: [] };
   let showsData = { items: [] };
   const showOut = byId('showOut');
+  const scheduleOut = byId('scheduleOut');
+  let scheduleData = { timezone: 'America/New_York', items: [] };
 
   function slugify(s) {
     return String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-{2,}/g,'-');
@@ -153,6 +188,16 @@ permalink: /manage/index.html
     renderShowSelect();
   }
 
+  async function loadSchedule() {
+    const res = await fetch('/manage-data/schedule.json', { cache: 'no-store' });
+    scheduleData = await res.json();
+    if (!Array.isArray(scheduleData.items)) scheduleData.items = [];
+    if (!scheduleData.timezone) scheduleData.timezone = 'America/New_York';
+    byId('scheduleTimezone').value = scheduleData.timezone;
+    renderScheduleSelect();
+    renderShowSlugOptions();
+  }
+
   async function loadDjs() {
     const res = await fetch('/manage-data/djs.json', { cache: 'no-store' });
     djsData = await res.json();
@@ -171,6 +216,44 @@ permalink: /manage/index.html
       if (selected && selected === o.value) o.selected = true;
       sel.appendChild(o);
     }
+  }
+
+  function renderShowSlugOptions(selected='') {
+    const sel = byId('slotShowSlug');
+    if (!sel) return;
+    const cur = selected || sel.value || '';
+    sel.innerHTML = '';
+    const o0 = document.createElement('option'); o0.value=''; o0.textContent='— Select show —'; sel.appendChild(o0);
+    for (const sh of showsData.items) {
+      const o = document.createElement('option');
+      o.value = sh.slug || '';
+      o.textContent = sh.title ? `${sh.title} (${sh.slug})` : (sh.slug || 'show');
+      if (cur && o.value === cur) o.selected = true;
+      sel.appendChild(o);
+    }
+  }
+
+  function renderScheduleSelect(selected='') {
+    const sel = byId('scheduleSelect');
+    if (!sel) return;
+    sel.innerHTML = '';
+    const o0 = document.createElement('option'); o0.value=''; o0.textContent='— Select Slot —'; sel.appendChild(o0);
+    scheduleData.items.forEach((row, i) => {
+      const o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = `${row.days || '?'} ${row.start || '--:--'}-${row.end || '--:--'} · ${row.showSlug || row.show || ''}`;
+      if (selected !== '' && String(selected) === String(i)) o.selected = true;
+      sel.appendChild(o);
+    });
+  }
+
+  function fillScheduleForm(row, idx='') {
+    byId('slotIndex').value = idx === '' ? '' : String(idx);
+    byId('slotDay').value = row?.days || 'Mon';
+    byId('slotStart').value = row?.start || '';
+    byId('slotEnd').value = row?.end || '';
+    byId('slotShowSlug').value = row?.showSlug || '';
+    byId('slotShowTitle').value = row?.show || '';
   }
 
   function renderShowSelect(selected='') {
@@ -237,6 +320,20 @@ permalink: /manage/index.html
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
       body: JSON.stringify({ items: showsData.items })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || `Save failed (${res.status})`);
+    return data;
+  }
+
+  async function saveScheduleRemote() {
+    const t = token();
+    if (!t) throw new Error('Missing Studio API token.');
+    const payload = { timezone: byId('scheduleTimezone').value.trim() || 'America/New_York', items: scheduleData.items };
+    const res = await fetch('/studio/api/save-schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || `Save failed (${res.status})`);
@@ -383,9 +480,71 @@ permalink: /manage/index.html
 
       await saveShowsRemote();
       renderShowSelect(slug);
+      renderShowSlugOptions();
       showOut.textContent = `Saved show '${item.title || slug}' and rebuilt site.`;
     } catch (e) {
       showOut.textContent = `Save error: ${e.message}`;
+    }
+  });
+
+
+  byId('scheduleSelect').addEventListener('change', (e) => {
+    const idx = e.target.value;
+    if (idx === '') return fillScheduleForm({}, '');
+    fillScheduleForm(scheduleData.items[Number(idx)] || {}, idx);
+  });
+
+  byId('slotNew').addEventListener('click', () => {
+    byId('scheduleSelect').value = '';
+    fillScheduleForm({ days: 'Mon', start: '', end: '', showSlug: '', show: '' }, '');
+    scheduleOut.textContent = 'New slot form ready.';
+  });
+
+  byId('slotSave').addEventListener('click', () => {
+    try {
+      const row = {
+        days: byId('slotDay').value,
+        start: byId('slotStart').value.trim(),
+        end: byId('slotEnd').value.trim(),
+        showSlug: byId('slotShowSlug').value.trim(),
+      };
+      const showTitle = byId('slotShowTitle').value.trim();
+      if (showTitle) row.show = showTitle;
+
+      const i = byId('slotIndex').value;
+      if (i === '') scheduleData.items.push(row);
+      else scheduleData.items[Number(i)] = row;
+
+      scheduleData.items.sort((a,b) => {
+        const order = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const da = order.indexOf(a.days); const db = order.indexOf(b.days);
+        if (da !== db) return da-db;
+        return String(a.start||'').localeCompare(String(b.start||''));
+      });
+
+      renderScheduleSelect();
+      scheduleOut.textContent = 'Slot saved locally. Click Save Schedule to publish.';
+      byId('slotIndex').value = '';
+    } catch (e) {
+      scheduleOut.textContent = `Save error: ${e.message}`;
+    }
+  });
+
+  byId('slotDelete').addEventListener('click', () => {
+    const i = byId('slotIndex').value;
+    if (i === '') return (scheduleOut.textContent = 'No slot selected.');
+    scheduleData.items.splice(Number(i), 1);
+    renderScheduleSelect();
+    fillScheduleForm({}, '');
+    scheduleOut.textContent = 'Slot deleted locally. Click Save Schedule to publish.';
+  });
+
+  byId('scheduleSaveAll').addEventListener('click', async () => {
+    try {
+      await saveScheduleRemote();
+      scheduleOut.textContent = 'Schedule saved and site rebuilt.';
+    } catch (e) {
+      scheduleOut.textContent = `Publish error: ${e.message}`;
     }
   });
 
@@ -433,5 +592,6 @@ permalink: /manage/index.html
 
   loadDjs();
   loadShows();
+  loadSchedule();
 })();
 </script>

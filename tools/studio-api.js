@@ -12,6 +12,7 @@ const TOKEN = process.env.STUDIO_UPLOAD_TOKEN || '';
 const manifestPath = path.join(ROOT, 'src', '_data', 'archive-manifest.json');
 const djsPath = path.join(ROOT, 'src', '_data', 'djs.json');
 const showsPath = path.join(ROOT, 'src', '_data', 'shows.json');
+const schedulePath = path.join(ROOT, 'src', '_data', 'schedule.json');
 const audioRoot = path.join(ROOT, 'src', 'audio');
 const uploadsRoot = path.join(ROOT, 'src', 'assets', 'uploads');
 
@@ -102,6 +103,22 @@ app.post('/api/save-shows', requireToken, (req, res) => {
     fs.writeFileSync(showsPath, JSON.stringify({ items }, null, 2) + '\n');
     runBuild((err, _stdout, stderr) => {
       if (err) return res.status(500).json({ ok: false, error: 'Build failed after saving shows', details: stderr || String(err) });
+      return res.json({ ok: true, count: items.length, build: 'ok' });
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+
+app.post('/api/save-schedule', requireToken, (req, res) => {
+  try {
+    const timezone = String(req.body?.timezone || 'America/New_York');
+    const items = req.body?.items;
+    if (!Array.isArray(items)) return res.status(400).json({ ok: false, error: 'items must be an array' });
+    fs.writeFileSync(schedulePath, JSON.stringify({ timezone, items }, null, 2) + '\n');
+    runBuild((err, _stdout, stderr) => {
+      if (err) return res.status(500).json({ ok: false, error: 'Build failed after saving schedule', details: stderr || String(err) });
       return res.json({ ok: true, count: items.length, build: 'ok' });
     });
   } catch (e) {
