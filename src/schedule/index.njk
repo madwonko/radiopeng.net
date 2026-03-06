@@ -3,149 +3,219 @@ layout: layout-schedule.njk
 title: Full Schedule
 ---
 
-<section class="schedulePage">
+{% set scheduleItems = (schedule.items if schedule and schedule.items else (schedule if schedule else [])) %}
+{% set tz = (schedule.timezone if schedule and schedule.timezone else "America/New_York") %}
+
+<section class="schedulePage scheduleV2">
   <h1>Full Schedule</h1>
 
-  <div class="scheduleTools">
-    <input id="schedSearch" type="search" placeholder="Search DJ, show, day…" />
+  <div class="card" style="margin-bottom:12px;">
+    <div class="pill-row" style="justify-content:space-between;gap:10px;">
+      <div class="meta">Timezone: <strong>{{ tz }}</strong> · Local station time: <span id="localClock">--:--</span></div>
+      <label class="meta" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="compactToggle" /> Compact mode
+      </label>
+    </div>
   </div>
 
-  <div class="scheduleTableWrap">
-    <table class="scheduleTable" id="scheduleTable">
+  <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+    <article class="card">
+      <h2 style="margin-top:0;">Now On Air</h2>
+      <div id="nowOnAir" class="meta">Nothing live right now.</div>
+    </article>
+    <article class="card">
+      <h2 style="margin-top:0;">Up Next</h2>
+      <div id="upNext" class="meta">No upcoming slot found.</div>
+    </article>
+  </div>
+
+  <div class="card scheduleTools" style="margin-bottom:12px;">
+    <div class="archive-control-grid">
+      <input id="schedSearch" type="search" placeholder="Search show, DJ, day…" />
+      <select id="schedShow"><option value="">All shows</option></select>
+      <select id="schedDj"><option value="">All DJs</option></select>
+      <select id="schedDay">
+        <option value="">All days</option>
+        <option>Sun</option><option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option><option>Sat</option>
+      </select>
+    </div>
+
+    <div class="pill-row" id="dayTabs" style="margin-top:10px;flex-wrap:wrap;">
+      <button class="pill active" data-day="">All</button>
+      <button class="pill" data-day="Sun">Sun</button>
+      <button class="pill" data-day="Mon">Mon</button>
+      <button class="pill" data-day="Tue">Tue</button>
+      <button class="pill" data-day="Wed">Wed</button>
+      <button class="pill" data-day="Thu">Thu</button>
+      <button class="pill" data-day="Fri">Fri</button>
+      <button class="pill" data-day="Sat">Sat</button>
+    </div>
+  </div>
+
+  <div class="scheduleTableWrap card" style="padding:0; overflow:auto;">
+    <table class="scheduleTable" id="scheduleTable" style="margin:0;">
       <thead>
         <tr>
-          <th data-sort="day">Day</th>
-          <th data-sort="time">Time</th>
-          <th data-sort="dj">DJ</th>
-          <th data-sort="show">Show</th>
-          <th data-sort="desc">Description</th>
+          <th>Day</th>
+          <th>Time</th>
+          <th>Show</th>
+          <th>DJ</th>
         </tr>
       </thead>
-      <tbody>
-        {% for e in schedule %}
-          <tr
-            data-day="{{ e.days }}"
-            data-start="{{ e.start }}"
-            data-end="{{ e.end }}"
-            data-dj="{{ e.dj }}"
-            data-show="{{ e.show }}"
-            data-slug="{{ e.showSlug }}"
-          >
-            <td class="mono">{{ e.days }}</td>
-            <td class="mono" data-time="{{ e.start }}-{{ e.end }}">{{ e.start }}–{{ e.end }}</td>
-            <td>{{ e.dj or "—" }}</td>
-            <td>
-              {# If you have /shows/<slug>/ pages, link them #}
-              {% if e.showSlug %}
-                <a href="/shows/{{ e.showSlug }}/" target="_blank" rel="noopener">{{ e.show }}</a>
-              {% else %}
-                {{ e.show or "—" }}
-              {% endif %}
-            </td>
-            <td class="desc" data-desc="">
-              <span class="descText">—</span>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
+      <tbody id="schedBody"></tbody>
     </table>
   </div>
-
-  <p class="meta" style="margin-top: 12px;">
-    Click column headers to sort. Search filters instantly.
-  </p>
 </section>
 
+<script id="scheduleData" type="application/json">{{ scheduleItems | dump | safe }}</script>
+<script id="showsData" type="application/json">{{ (shows.items if shows and shows.items else []) | dump | safe }}</script>
+<script id="djsData" type="application/json">{{ (djs.items if djs and djs.items else []) | dump | safe }}</script>
 <script>
 (() => {
-  const table = document.getElementById("scheduleTable");
-  const search = document.getElementById("schedSearch");
-  if (!table) return;
+  const tz = {{ tz | dump | safe }};
+  const DAY_ORDER = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const data = JSON.parse(document.getElementById('scheduleData').textContent || '[]');
+  const shows = JSON.parse(document.getElementById('showsData').textContent || '[]');
+  const djs = JSON.parse(document.getElementById('djsData').textContent || '[]');
 
-  const tbody = table.querySelector("tbody");
-  let rows = Array.from(tbody.querySelectorAll("tr"));
+  const body = document.getElementById('schedBody');
+  const search = document.getElementById('schedSearch');
+  const showSel = document.getElementById('schedShow');
+  const djSel = document.getElementById('schedDj');
+  const daySel = document.getElementById('schedDay');
+  const nowEl = document.getElementById('nowOnAir');
+  const nextEl = document.getElementById('upNext');
+  const tabs = document.getElementById('dayTabs');
+  const compactToggle = document.getElementById('compactToggle');
+  const localClock = document.getElementById('localClock');
 
-  // Optional: show descriptions if you provide them in a global window.SHOW_DESCRIPTIONS map
-  // Example: window.SHOW_DESCRIPTIONS = { "madwonko": "Brief description here" }
-  const descMap = (window.SHOW_DESCRIPTIONS && typeof window.SHOW_DESCRIPTIONS === "object")
-    ? window.SHOW_DESCRIPTIONS
-    : null;
+  const showBySlug = Object.fromEntries((shows||[]).map(s => [s.slug, s]));
+  const djBySlug = Object.fromEntries((djs||[]).map(d => [d.slug, d]));
 
-  if (descMap) {
-    rows.forEach(r => {
-      const slug = r.getAttribute("data-slug") || "";
-      const td = r.querySelector("td.desc");
-      const span = r.querySelector(".descText");
-      const d = (descMap[slug] || "").trim();
-      if (td && span) {
-        td.setAttribute("data-desc", d);
-        span.textContent = d || "—";
-      }
-    });
-  }
-
-  // Search filter
-  if (search) {
-    search.addEventListener("input", () => {
-      const q = search.value.trim().toLowerCase();
-      rows.forEach(r => {
-        const txt = r.textContent.toLowerCase();
-        r.style.display = txt.includes(q) ? "" : "none";
-      });
-    });
-  }
-
-  // Sorting helpers
-  const dayOrder = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-
-  const parseTime = (t) => {
-    // handles "24:00" too
-    const m = /^(\d{1,2}):(\d{2})$/.exec((t || "").trim());
-    if (!m) return 9999;
-    let hh = parseInt(m[1], 10);
-    const mm = parseInt(m[2], 10);
-    // treat 24:00 as 24*60
-    if (hh === 24) hh = 24;
-    return hh * 60 + mm;
-  };
-
-  const getKey = (row, key) => {
-    const day = row.getAttribute("data-day") || "";
-    const start = row.getAttribute("data-start") || "";
-    const end = row.getAttribute("data-end") || "";
-    const dj = row.getAttribute("data-dj") || "";
-    const show = row.getAttribute("data-show") || "";
-    const desc = (row.querySelector("td.desc")?.getAttribute("data-desc") || "");
-
-    if (key === "day") return dayOrder[day] ?? 99;
-    if (key === "time") return parseTime(start) * 10000 + parseTime(end);
-    if (key === "dj") return dj.toLowerCase();
-    if (key === "show") return show.toLowerCase();
-    if (key === "desc") return desc.toLowerCase();
-    return "";
-  };
-
-  let sortDir = 1;
-  let lastKey = null;
-
-  table.querySelectorAll("th[data-sort]").forEach(th => {
-    th.addEventListener("click", () => {
-      const key = th.getAttribute("data-sort");
-      if (!key) return;
-
-      sortDir = (lastKey === key) ? -sortDir : 1;
-      lastKey = key;
-
-      rows.sort((a, b) => {
-        const av = getKey(a, key);
-        const bv = getKey(b, key);
-        if (av > bv) return sortDir;
-        if (av < bv) return -sortDir;
-        return 0;
-      });
-
-      rows.forEach(r => tbody.appendChild(r));
-    });
+  const rows = (Array.isArray(data) ? data : []).map((r, i) => {
+    const show = showBySlug[r.showSlug] || null;
+    const dj = show ? (djBySlug[show.djSlug] || null) : null;
+    return {
+      i,
+      days: r.days || '',
+      start: r.start || '',
+      end: r.end || '',
+      showSlug: r.showSlug || '',
+      show: r.show || show?.title || r.showSlug || '—',
+      dj: dj?.name || '—'
+    };
+  }).sort((a,b) => {
+    const da = DAY_ORDER.indexOf(a.days), db = DAY_ORDER.indexOf(b.days);
+    if (da !== db) return da-db;
+    return (a.start||'').localeCompare(b.start||'');
   });
+
+  function toMinutes(hhmm){
+    const m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm||''));
+    if(!m) return null;
+    let h = Number(m[1]); const mm = Number(m[2]);
+    if (h===24) h=0;
+    return h*60+mm;
+  }
+
+  function localNow() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
+  }
+
+  function renderClock() {
+    const d = localNow();
+    localClock.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function fillFilters() {
+    const showsSet = [...new Set(rows.map(r => r.show).filter(Boolean))].sort();
+    const djsSet = [...new Set(rows.map(r => r.dj).filter(Boolean))].sort();
+    showsSet.forEach(s => { const o=document.createElement('option'); o.value=s.toLowerCase(); o.textContent=s; showSel.appendChild(o); });
+    djsSet.forEach(s => { const o=document.createElement('option'); o.value=s.toLowerCase(); o.textContent=s; djSel.appendChild(o); });
+  }
+
+  function isLive(row, nowDay, nowMins) {
+    if (row.days !== nowDay) return false;
+    const s = toMinutes(row.start), e = toMinutes(row.end);
+    if (s == null || e == null) return false;
+    if (e >= s) return nowMins >= s && nowMins < e;
+    return nowMins >= s || nowMins < e;
+  }
+
+  function nextSlot(nowDayIdx, nowMins) {
+    const expanded = rows.map(r => ({...r, dayIdx: DAY_ORDER.indexOf(r.days), startM: toMinutes(r.start)})).filter(r => r.dayIdx>=0 && r.startM!=null);
+    let best = null; let bestDiff = Infinity;
+    for (const r of expanded) {
+      let diffDays = (r.dayIdx - nowDayIdx + 7) % 7;
+      let diffMins = diffDays*1440 + (r.startM - nowMins);
+      if (diffMins <= 0) diffMins += 7*1440;
+      if (diffMins < bestDiff) { bestDiff = diffMins; best = r; }
+    }
+    return best;
+  }
+
+  function renderStatusCards() {
+    const d = localNow();
+    const day = DAY_ORDER[d.getDay()];
+    const mins = d.getHours()*60 + d.getMinutes();
+
+    const live = rows.find(r => isLive(r, day, mins));
+    if (live) nowEl.innerHTML = `<strong>${live.show}</strong><br>${live.days} ${live.start}–${live.end} · ${live.dj}`;
+    else nowEl.textContent = 'Nothing live right now.';
+
+    const nxt = nextSlot(d.getDay(), mins);
+    if (nxt) nextEl.innerHTML = `<strong>${nxt.show}</strong><br>${nxt.days} ${nxt.start}–${nxt.end} · ${nxt.dj}`;
+    else nextEl.textContent = 'No upcoming slot found.';
+  }
+
+  function renderTable() {
+    const q = (search.value||'').toLowerCase().trim();
+    const show = (showSel.value||'').toLowerCase().trim();
+    const dj = (djSel.value||'').toLowerCase().trim();
+    const day = (daySel.value||'').trim();
+
+    const filtered = rows.filter(r => {
+      const text = `${r.days} ${r.start} ${r.end} ${r.show} ${r.dj}`.toLowerCase();
+      if (q && !text.includes(q)) return false;
+      if (show && r.show.toLowerCase() !== show) return false;
+      if (dj && r.dj.toLowerCase() !== dj) return false;
+      if (day && r.days !== day) return false;
+      return true;
+    });
+
+    body.innerHTML = '';
+    filtered.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="mono">${r.days}</td>
+        <td class="mono">${r.start}–${r.end}</td>
+        <td>${r.showSlug ? `<a href="/programs/${r.showSlug}/" target="_blank" rel="noopener">${r.show}</a>` : r.show}</td>
+        <td>${r.dj}</td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+
+  tabs?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-day]');
+    if (!btn) return;
+    daySel.value = btn.dataset.day || '';
+    tabs.querySelectorAll('[data-day]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+  });
+
+  compactToggle?.addEventListener('change', () => {
+    document.body.classList.toggle('schedule-compact', compactToggle.checked);
+  });
+
+  [search, showSel, djSel, daySel].forEach(el => el?.addEventListener('input', renderTable));
+  [showSel, djSel, daySel].forEach(el => el?.addEventListener('change', renderTable));
+
+  fillFilters();
+  renderTable();
+  renderClock();
+  renderStatusCards();
+  setInterval(() => { renderClock(); renderStatusCards(); }, 30000);
 })();
 </script>
