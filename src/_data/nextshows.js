@@ -1,15 +1,11 @@
 const { DateTime } = require("luxon");
+const showsData = require("./shows.json");
+const djsData = require("./djs.json");
 
 const DEFAULT_TZ = "America/New_York";
 const DAY_TO_NUM = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
 
 function normalizeSchedule(raw) {
-  // Accept:
-  // 1) [ ... ]  (array of shows)
-  // 2) { shows: [ ... ] }
-  // 3) { items: [ ... ] }
-  // 4) { schedule: [ ... ] }
-  // Anything else => []
   if (Array.isArray(raw)) return raw;
   if (raw && Array.isArray(raw.shows)) return raw.shows;
   if (raw && Array.isArray(raw.items)) return raw.items;
@@ -18,7 +14,6 @@ function normalizeSchedule(raw) {
 }
 
 function getTimezone(raw) {
-  // Optional: let schedule.json define timezone
   if (raw && typeof raw.timezone === "string" && raw.timezone.trim()) return raw.timezone.trim();
   return DEFAULT_TZ;
 }
@@ -39,6 +34,12 @@ module.exports = () => {
   const TZ = getTimezone(raw);
   const schedule = normalizeSchedule(raw);
 
+  const showItems = Array.isArray(showsData?.items) ? showsData.items : [];
+  const djItems = Array.isArray(djsData?.items) ? djsData.items : [];
+
+  const showBySlug = Object.fromEntries(showItems.map((s) => [s.slug, s]));
+  const djBySlug = Object.fromEntries(djItems.map((d) => [d.slug, d]));
+
   const now = DateTime.now().setZone(TZ);
   const occurrences = [];
 
@@ -47,6 +48,12 @@ module.exports = () => {
 
     const daysRaw = item.days ?? item.day;
     const days = Array.isArray(daysRaw) ? daysRaw : (daysRaw ? [daysRaw] : []);
+
+    const showObj = item.showSlug ? showBySlug[item.showSlug] : null;
+    const djObj = showObj?.djSlug ? djBySlug[showObj.djSlug] : null;
+
+    const showName = item.show || item.name || showObj?.title || item.showSlug || "Untitled Show";
+    const djName = item.dj || item.host || djObj?.name || "—";
 
     for (const d of days) {
       const weekdayNum = DAY_TO_NUM[String(d)];
@@ -63,17 +70,16 @@ module.exports = () => {
       }
 
       occurrences.push({
-        show: item.show || item.name || "Untitled Show",
-        dj: item.dj || item.host || "—",
+        show: showName,
+        dj: djName,
         day: String(d),
         startISO: startDT.toISO(),
         endISO: endDT.toISO(),
-        timezone: TZ
+        timezone: TZ,
       });
     }
   }
 
   occurrences.sort((a, b) => a.startISO.localeCompare(b.startISO));
-
   return occurrences.slice(0, 5);
 };
