@@ -15,6 +15,7 @@ const showsPath = path.join(ROOT, 'src', '_data', 'shows.json');
 const schedulePath = path.join(ROOT, 'src', '_data', 'schedule.json');
 const audioRoot = path.join(ROOT, 'src', 'audio');
 const uploadsRoot = path.join(ROOT, 'src', 'assets', 'uploads');
+const articlesRoot = path.join(ROOT, 'src', 'articles');
 
 function slugify(str) {
   return String(str || 'item')
@@ -175,6 +176,49 @@ app.post('/api/upload', requireToken, upload.single('audio'), (req, res) => {
     runBuild((err, _stdout, stderr) => {
       if (err) return res.status(500).json({ ok: false, error: 'Build failed', details: stderr || String(err) });
       return res.json({ ok: true, slug, audioUrl: `/audio/${safeDj}/${filename}`, build: 'ok' });
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+
+app.post('/api/save-article', requireToken, (req, res) => {
+  try {
+    const title = String(req.body?.title || '').trim();
+    const date = String(req.body?.date || '').trim();
+    const description = String(req.body?.description || '').trim();
+    const body = String(req.body?.body || '').trim();
+    const image = String(req.body?.image || '').trim();
+
+    if (!title) return res.status(400).json({ ok: false, error: 'title is required' });
+    if (!date) return res.status(400).json({ ok: false, error: 'date is required' });
+    if (!description) return res.status(400).json({ ok: false, error: 'description is required' });
+    if (!body) return res.status(400).json({ ok: false, error: 'body is required' });
+
+    const safeDate = date.slice(0, 10);
+    const slug = slugify(title) || 'article';
+    const filename = `${safeDate}-${slug}.md`;
+    fs.mkdirSync(articlesRoot, { recursive: true });
+
+    const esc = (v) => String(v || '').replace(/"/g, '\\"');
+    const lines = [
+      '---',
+      `title: "${esc(title)}"`,
+      `description: "${esc(description)}"`,
+      `date: ${safeDate}`,
+      'tags: [articles]',
+      'layout: layout-article.njk',
+    ];
+    if (image) lines.push(`image: "${esc(image)}"`);
+    lines.push('---', '', body, '');
+
+    const fullPath = path.join(articlesRoot, filename);
+    fs.writeFileSync(fullPath, lines.join('\n'));
+
+    runBuild((err, _stdout, stderr) => {
+      if (err) return res.status(500).json({ ok: false, error: 'Build failed after saving article', details: stderr || String(err) });
+      return res.json({ ok: true, filename, path: `/articles/${slug}/`, build: 'ok' });
     });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });

@@ -152,6 +152,7 @@ permalink: /manage/index.html
   <div class="pill-row" style="margin-top:10px;">
     <button class="btn" id="articleGenerate">Generate markdown</button>
     <button class="btn" id="articleDownload">Download .md</button>
+    <button class="btn" id="articlePublish">Publish article</button>
   </div>
 
   <div id="articleOut" class="meta" style="margin-top:8px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Fill fields and generate file.</div>
@@ -350,6 +351,28 @@ permalink: /manage/index.html
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || `Save failed (${res.status})`);
+    return data;
+  }
+
+  async function saveArticleRemote() {
+    const t = token();
+    if (!t) throw new Error('Missing Studio API token.');
+
+    const payload = {
+      title: byId('articleTitle').value.trim(),
+      date: byId('articleDate').value.trim(),
+      image: byId('articleImage').value.trim(),
+      description: byId('articleDescription').value.trim(),
+      body: byId('articleBody').value.trim(),
+    };
+
+    const res = await fetch('/studio/api/save-article', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || `Publish failed (${res.status})`);
     return data;
   }
 
