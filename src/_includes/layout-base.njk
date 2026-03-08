@@ -37,7 +37,7 @@
 
         <section class="sidebox schedulebox">
           <h3>On Air Now</h3>
-          <a href="/schedule/" class="side-link" id="openSchedule" data-no-swup>
+          <a href="/schedule/" class="side-link" id="openSchedule">
             Full Schedule (table)
           </a>
         </section>
@@ -193,7 +193,6 @@
 
   <!-- SCRIPTS -->
   <script src="/assets/player.js" defer></script>
-  <script src="https://unpkg.com/swup@4" defer></script>
 
   <script>
     // --- Now Playing ribbon updater (safe with Swup swaps) ---
@@ -305,30 +304,7 @@
     }
   </script>
 
-  <script>
-    // Swup init (kept outside player.js so the player remains stable)
-    document.addEventListener("DOMContentLoaded", () => {
-      if (typeof Swup === "undefined") return;
 
-      const swup = new Swup({
-        containers: ["#swup"],
-        linkSelector: "a[href^='/']:not([href^='//']):not([href^='http']):not([data-no-swup])"
-      });
-
-      swup.hooks.on("content:replace", () => {
-        window.scrollTo(0, 0);
-        bindSchedulePopup();
-        bindHomePlayButton();
-        bindExperimentalMode();
-        updateNowPlaying();
-      });
-
-      // first bind
-      bindSchedulePopup();
-      bindHomePlayButton();
-      bindExperimentalMode();
-    });
-  </script>
 
   <!-- MIRROR NOW PLAYING + SHOW INTO SIDEBAR -->
   <script>
