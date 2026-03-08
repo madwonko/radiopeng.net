@@ -27,6 +27,16 @@ permalink: /publish/index.html
   </div>
 
   <label style="display:block;margin-top:10px;"><div class="meta">Brief description</div><textarea id="pubDesc" style="width:100%;min-height:80px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea></label>
+
+  <label style="display:block;margin-top:10px;">
+    <div class="meta" style="margin-bottom:6px;">Tags</div>
+    <div class="pill-row" style="margin-bottom:8px;">
+      <button class="btn" id="loadTagsBtn" type="button">Load existing tags</button>
+      <span class="meta">Select tags to include with this article.</span>
+    </div>
+    <div id="tagPicker" class="pill-row" style="flex-wrap:wrap;gap:8px;"></div>
+    <input id="customTags" type="text" placeholder="Optional custom tags (comma-separated)" style="margin-top:8px;width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" />
+  </label>
   <label style="display:block;margin-top:10px;"><div class="meta">Article body (Markdown)</div><textarea id="pubBody" style="width:100%;min-height:240px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea></label>
 
   <div class="pill-row" style="margin-top:10px;">
@@ -94,6 +104,34 @@ permalink: /publish/index.html
     }
   }
 
+  function selectedTags() {
+    const tags = [];
+    document.querySelectorAll('input[name="pubTag"]:checked').forEach((cb) => tags.push(cb.value));
+    const custom = (byId('customTags')?.value || '').split(',').map((t) => t.trim()).filter(Boolean);
+    return [...new Set([...tags, ...custom])];
+  }
+
+  function renderTagPicker(tags=[]) {
+    const wrap = byId('tagPicker');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    tags.forEach((tag) => {
+      const id = `tag-${tag}`;
+      const label = document.createElement('label');
+      label.className = 'pill';
+      label.style.cursor = 'pointer';
+      label.innerHTML = `<input type="checkbox" name="pubTag" value="${tag}" id="${id}" style="margin-right:6px;"/> ${tag}`;
+      wrap.appendChild(label);
+    });
+  }
+
+  async function loadTags() {
+    const data = await api('/studio/api/list-tags');
+    const tags = Array.isArray(data.tags) ? data.tags : [];
+    renderTagPicker(tags);
+    return tags;
+  }
+
   async function uploadImage(file, folder, nameHint) {
     const t = token();
     if (!t) throw new Error('Token required.');
@@ -138,6 +176,7 @@ permalink: /publish/index.html
         image: byId('pubImage').value.trim(),
         description: byId('pubDesc').value.trim(),
         body: byId('pubBody').value.trim(),
+        tags: selectedTags(),
       };
 
       const res = await fetch('/studio/api/save-article', {
@@ -151,6 +190,15 @@ permalink: /publish/index.html
       out.textContent = `Published ✅ ${data.filename} → ${data.path}`;
     } catch (e) {
       out.textContent = `Publish error: ${e.message}`;
+    }
+  });
+
+  byId('loadTagsBtn').addEventListener('click', async () => {
+    try {
+      const tags = await loadTags();
+      out.textContent = tags.length ? `Loaded ${tags.length} tags.` : 'No existing tags found yet.';
+    } catch (e) {
+      out.textContent = `Tag load error: ${e.message}`;
     }
   });
 

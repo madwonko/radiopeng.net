@@ -6,16 +6,48 @@ permalink: /tags/index.html
 
 <section class="hero">
   <h1>Tags</h1>
-  <p>Organized chaos. Mostly organized.</p>
+  <p>Browse by topic. Most-used tags first.</p>
 </section>
 
 <section class="card" style="margin-top:18px;">
-  <div class="article-list">
+  <div class="pill-row" style="margin-bottom:10px;">
+    <input id="tagSearch" type="search" placeholder="Filter tags..." style="flex:1;min-width:240px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" />
+  </div>
+
+  <div class="article-list" id="tagListWrap">
     {% for tag in collections.tagList %}
-      <a class="article" href="/tags/{{ tag | url }}/">
+      {% set count = (collections[tag] | length) %}
+      <a class="article tag-item" href="/tags/{{ tag | url }}/" data-tag="{{ tag | lower }}" data-count="{{ count }}">
         <div class="name">{{ tag }}</div>
-        <div class="blurb">Browse posts tagged “{{ tag }}”.</div>
+        <div class="blurb">{{ count }} post{% if count != 1 %}s{% endif %} tagged “{{ tag }}”.</div>
       </a>
     {% endfor %}
   </div>
 </section>
+
+<script>
+(() => {
+  const wrap = document.getElementById(tagListWrap);
+  const search = document.getElementById(tagSearch);
+  if (!wrap) return;
+
+  const items = Array.from(wrap.querySelectorAll(.tag-item));
+
+  // sort by count desc, then alpha
+  items.sort((a,b) => {
+    const ac = Number(a.dataset.count || 0);
+    const bc = Number(b.dataset.count || 0);
+    if (ac !== bc) return bc - ac;
+    return (a.dataset.tag || ).localeCompare(b.dataset.tag || );
+  });
+  items.forEach((it) => wrap.appendChild(it));
+
+  search?.addEventListener(input, () => {
+    const q = (search.value || ).toLowerCase().trim();
+    items.forEach((it) => {
+      const ok = !q || (it.dataset.tag || ).includes(q);
+      it.style.display = ok ?  : none;
+    });
+  });
+})();
+</script>

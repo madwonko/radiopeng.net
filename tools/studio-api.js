@@ -31,6 +31,40 @@ function runBuild(cb) {
   exec('npm run build', { cwd: ROOT }, (err, stdout, stderr) => cb(err, stdout, stderr));
 }
 
+function collectArticleTags() {
+  const tags = new Set();
+  const skip = new Set(['all','nav','post','posts','articles']);
+
+  function fromFile(fp) {
+    try {
+      const txt = fs.readFileSync(fp, 'utf8');
+      const m = txt.match(/^---\n([\s\S]*?)\n---/);
+      if (!m) return;
+      const fm = m[1];
+      const line = fm.split(/\r?\n/).find((l) => l.trim().startsWith('tags:'));
+      if (!line) return;
+      const rest = line.split(':').slice(1).join(':').trim();
+      if (rest.startsWith('[')) {
+        for (const t of rest.replace(/[\[\]]/g,'').split(',')) {
+          const tag = String(t).trim().replace(/^['"]|['"]$/g,'');
+          if (tag && !skip.has(tag)) tags.add(tag);
+        }
+      }
+    } catch (_) {}
+  }
+
+  function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fp = path.join(dir, e.name);
+      if (e.isDirectory()) walk(fp);
+      else if (e.isFile() && e.name.endsWith('.md')) fromFile(fp);
+    }
+  }
+
+  if (fs.existsSync(articlesRoot)) walk(articlesRoot);
+  return Array.from(tags).sort((a,b)=>a.localeCompare(b));
+}
+
 function requireToken(req, res, next) {
   if (!TOKEN) return res.status(500).json({ ok: false, error: 'Server token not configured' });
   const token = req.get('x-studio-token') || '';
@@ -47,6 +81,14 @@ const app = express();
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
+
+app.get('/api/list-tags', requireToken, (_req, res) => {
+  try {
+    return res.json({ ok: true, tags: collectArticleTags() });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 app.post('/api/upload-image', requireToken, upload.single('image'), (req, res) => {
   try {
@@ -243,6 +285,7 @@ app.post('/api/save-article', requireToken, (req, res) => {
     const description = String(req.body?.description || '').trim();
     const body = String(req.body?.body || '').trim();
     const image = String(req.body?.image || '').trim();
+    const rawTags = req.body?.tags;
 
     if (!title) return res.status(400).json({ ok: false, error: 'title is required' });
     if (!date) return res.status(400).json({ ok: false, error: 'date is required' });
@@ -255,12 +298,27 @@ app.post('/api/save-article', requireToken, (req, res) => {
     fs.mkdirSync(articlesRoot, { recursive: true });
 
     const esc = (v) => String(v || '').replace(/"/g, '\\"');
+    const tags = new Set(['articles']);
+    if (Array.isArray(rawTags)) {
+      for (const t of rawTags) {
+        const tag = slugify(String(t || '')).replace(/-/g, '-');
+        if (tag && tag !== 'articles') tags.add(tag);
+      }
+    } else if (typeof rawTags === 'string') {
+      for (const t of rawTags.split(',')) {
+        const tag = slugify(String(t || ''));
+        if (tag && tag !== 'articles') tags.add(tag);
+      }
+    }
+
+    const tagList = Array.from(tags);
+
     const lines = [
       '---',
       `title: "${esc(title)}"`,
       `description: "${esc(description)}"`,
       `date: ${safeDate}`,
-      'tags: [articles]',
+      `tags: [${tagList.join(', ')}]`,
       'layout: layout-article.njk',
     ];
     if (image) lines.push(`image: "${esc(image)}"`);
