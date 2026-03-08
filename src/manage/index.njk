@@ -16,6 +16,7 @@ permalink: /manage/index.html
     <input id="studioToken" type="password" placeholder="Studio API token" style="flex:1;min-width:260px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" />
     <button class="btn" id="saveStudioToken">Save token</button>
   </div>
+  <div id="tokenStatus" class="meta" style="margin-top:8px;">Token not loaded.</div>
 </section>
 
 <section class="card" style="margin-top:14px;">
@@ -163,6 +164,34 @@ permalink: /manage/index.html
 (() => {
   const byId = (id) => document.getElementById(id);
   const djOut = byId('djOut');
+  const tokenStatus = byId('tokenStatus');
+  let memoryToken = '';
+
+  function safeGetToken() {
+    if (memoryToken) return memoryToken;
+    try {
+      return localStorage.getItem('studioUploadToken') || '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function safeSetToken(v) {
+    memoryToken = v || '';
+    try {
+      localStorage.setItem('studioUploadToken', memoryToken);
+      return 'saved';
+    } catch (_) {
+      return 'memory';
+    }
+  }
+
+  function refreshTokenStatus() {
+    const v = byId('studioToken')?.value || safeGetToken();
+    if (!tokenStatus) return;
+    tokenStatus.textContent = v ? 'Token loaded.' : 'Token not loaded.';
+  }
+
   const articleOut = byId('articleOut');
   let djsData = { items: [] };
   let showsData = { items: [] };
@@ -179,7 +208,7 @@ permalink: /manage/index.html
   }
 
   function token() {
-    return byId('studioToken').value || localStorage.getItem('studioUploadToken') || '';
+    return byId('studioToken').value || safeGetToken() || '';
   }
 
   async function loadShows() {
@@ -403,8 +432,11 @@ permalink: /manage/index.html
   }
 
   byId('saveStudioToken').addEventListener('click', () => {
-    localStorage.setItem('studioUploadToken', byId('studioToken').value || '');
-    djOut.textContent = 'Token saved in this browser.';
+    const mode = safeSetToken(byId('studioToken').value || '');
+    refreshTokenStatus();
+    djOut.textContent = mode === 'saved'
+      ? 'Token saved in this browser.'
+      : 'Token stored for this page only (browser blocks local storage).';
   });
 
   byId('djSelect').addEventListener('change', (e) => {
@@ -610,8 +642,11 @@ permalink: /manage/index.html
 
   const d = new Date();
   byId('articleDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const saved = localStorage.getItem('studioUploadToken') || '';
+  const saved = safeGetToken();
   if (saved) byId('studioToken').value = saved;
+  refreshTokenStatus();
+
+  byId('studioToken')?.addEventListener('input', refreshTokenStatus);
 
   loadDjs();
   loadShows();
