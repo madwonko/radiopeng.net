@@ -183,6 +183,59 @@ app.post('/api/upload', requireToken, upload.single('audio'), (req, res) => {
 });
 
 
+
+
+app.get('/api/list-articles', requireToken, (_req, res) => {
+  try {
+    const entries = fs.readdirSync(articlesRoot, { withFileTypes: true });
+    const out = [];
+
+    for (const e of entries) {
+      if (e.isFile() && e.name.endsWith('.md')) {
+        out.push({ kind: 'file', name: e.name, ref: e.name });
+      }
+      if (e.isDirectory()) {
+        const idx = path.join(articlesRoot, e.name, 'index.md');
+        if (fs.existsSync(idx)) {
+          out.push({ kind: 'dir', name: e.name, ref: `${e.name}/index.md` });
+        }
+      }
+    }
+
+    out.sort((a,b) => a.name.localeCompare(b.name));
+    return res.json({ ok: true, items: out });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post('/api/delete-article', requireToken, (req, res) => {
+  try {
+    const ref = String(req.body?.ref || '').trim();
+    if (!ref) return res.status(400).json({ ok: false, error: 'ref is required' });
+
+    const target = path.resolve(articlesRoot, ref);
+    const base = path.resolve(articlesRoot) + path.sep;
+    if (!target.startsWith(base)) return res.status(400).json({ ok: false, error: 'invalid ref' });
+
+    if (!fs.existsSync(target)) return res.status(404).json({ ok: false, error: 'article not found' });
+
+    if (target.endsWith(path.sep + 'index.md') && fs.statSync(path.dirname(target)).isDirectory()) {
+      fs.rmSync(path.dirname(target), { recursive: true, force: true });
+    } else {
+      if (!target.endsWith('.md')) return res.status(400).json({ ok: false, error: 'only markdown can be deleted' });
+      fs.unlinkSync(target);
+    }
+
+    runBuild((err, _stdout, stderr) => {
+      if (err) return res.status(500).json({ ok: false, error: 'Build failed after deleting article', details: stderr || String(err) });
+      return res.json({ ok: true, deleted: ref, build: 'ok' });
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.post('/api/save-article', requireToken, (req, res) => {
   try {
     const title = String(req.body?.title || '').trim();

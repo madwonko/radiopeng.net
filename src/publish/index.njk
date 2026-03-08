@@ -36,6 +36,17 @@ permalink: /publish/index.html
   <div id="pubOut" class="meta" style="margin-top:10px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Ready.</div>
 </section>
 
+<section class="card" style="margin-top:14px;">
+  <h2>Remove Article</h2>
+  <p class="meta">Select an article and remove it (will rebuild site).</p>
+  <div class="pill-row">
+    <select id="delArticleSelect" style="flex:1;min-width:260px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></select>
+    <button class="btn" id="refreshArticles">Refresh list</button>
+    <button class="btn" id="deleteArticleBtn">Delete article</button>
+  </div>
+  <div id="delOut" class="meta" style="margin-top:10px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:38px;">Ready.</div>
+</section>
+
 <script>
 (() => {
   const byId = (id) => document.getElementById(id);
@@ -44,6 +55,44 @@ permalink: /publish/index.html
 
   const d = new Date();
   byId('pubDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+  const delOut = byId('delOut');
+
+  async function api(path, opts={}) {
+    const t = token();
+    if (!t) throw new Error('Token required.');
+    const res = await fetch(path, {
+      ...opts,
+      headers: {
+        ...(opts.headers || {}),
+        'x-studio-token': t,
+      }
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    return data;
+  }
+
+  async function loadArticleList() {
+    const sel = byId('delArticleSelect');
+    if (!sel) return;
+    sel.innerHTML = '';
+    const data = await api('/studio/api/list-articles');
+    const items = Array.isArray(data.items) ? data.items : [];
+    if (!items.length) {
+      const o = document.createElement('option');
+      o.value = '';
+      o.textContent = 'No articles found';
+      sel.appendChild(o);
+      return;
+    }
+    for (const it of items) {
+      const o = document.createElement('option');
+      o.value = it.ref;
+      o.textContent = `${it.name} (${it.kind})`;
+      sel.appendChild(o);
+    }
+  }
 
   async function uploadImage(file, folder, nameHint) {
     const t = token();
@@ -103,6 +152,39 @@ permalink: /publish/index.html
     } catch (e) {
       out.textContent = `Publish error: ${e.message}`;
     }
+  });
+
+  byId('refreshArticles').addEventListener('click', async () => {
+    try {
+      await loadArticleList();
+      delOut.textContent = 'Article list refreshed.';
+    } catch (e) {
+      delOut.textContent = `Refresh error: ${e.message}`;
+    }
+  });
+
+  byId('deleteArticleBtn').addEventListener('click', async () => {
+    try {
+      const ref = byId('delArticleSelect').value;
+      if (!ref) throw new Error('Select an article first.');
+      const ok = confirm(`Delete article: ${ref}?`);
+      if (!ok) return;
+
+      const data = await api('/studio/api/delete-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ref })
+      });
+
+      delOut.textContent = `Deleted ✅ ${data.deleted}`;
+      await loadArticleList();
+    } catch (e) {
+      delOut.textContent = `Delete error: ${e.message}`;
+    }
+  });
+
+  loadArticleList().catch((e) => {
+    if (delOut) delOut.textContent = `List load error: ${e.message}`;
   });
 })();
 </script>
