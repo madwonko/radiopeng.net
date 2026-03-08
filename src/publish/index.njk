@@ -39,26 +39,26 @@ permalink: /publish/index.html
 <script>
 (() => {
   const byId = (id) => document.getElementById(id);
-  const out = byId(pubOut);
-  const token = () => (byId(pubToken).value || ).trim();
+  const out = byId('pubOut');
+  const token = () => (byId('pubToken').value || '').trim();
 
   const d = new Date();
-  byId(pubDate).value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,0)}-${String(d.getDate()).padStart(2,0)}`;
+  byId('pubDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
   async function uploadImage(file, folder, nameHint) {
     const t = token();
-    if (!t) throw new Error(Token required.);
-    if (!file) throw new Error(No file selected.);
+    if (!t) throw new Error('Token required.');
+    if (!file) throw new Error('No file selected.');
 
     const fd = new FormData();
-    fd.append(image, file);
-    fd.append(folder, folder);
-    fd.append(name, nameHint || upload);
-    fd.append(rebuild, true);
+    fd.append('image', file);
+    fd.append('folder', folder);
+    fd.append('name', nameHint || 'upload');
+    fd.append('rebuild', 'true');
 
-    const res = await fetch(/studio/api/upload-image, {
-      method: POST,
-      headers: { x-studio-token: t },
+    const res = await fetch('/studio/api/upload-image', {
+      method: 'POST',
+      headers: { 'x-studio-token': t },
       body: fd
     });
     const data = await res.json();
@@ -66,34 +66,34 @@ permalink: /publish/index.html
     return data.url;
   }
 
-  byId(pubUploadImage).addEventListener(click, async () => {
+  byId('pubUploadImage').addEventListener('click', async () => {
     try {
-      const file = byId(pubImageFile).files[0];
-      const hint = byId(pubTitle).value || article-image;
-      const url = await uploadImage(file, articles, hint);
-      byId(pubImage).value = url;
+      const file = byId('pubImageFile').files[0];
+      const hint = byId('pubTitle').value || 'article-image';
+      const url = await uploadImage(file, 'articles', hint);
+      byId('pubImage').value = url;
       out.textContent = `Image uploaded: ${url}`;
     } catch (e) {
       out.textContent = `Image upload error: ${e.message}`;
     }
   });
 
-  byId(pubArticle).addEventListener(click, async () => {
+  byId('pubArticle').addEventListener('click', async () => {
     try {
       const t = token();
-      if (!t) throw new Error(Token required.);
+      if (!t) throw new Error('Token required.');
 
       const payload = {
-        title: byId(pubTitle).value.trim(),
-        date: byId(pubDate).value.trim(),
-        image: byId(pubImage).value.trim(),
-        description: byId(pubDesc).value.trim(),
-        body: byId(pubBody).value.trim(),
+        title: byId('pubTitle').value.trim(),
+        date: byId('pubDate').value.trim(),
+        image: byId('pubImage').value.trim(),
+        description: byId('pubDesc').value.trim(),
+        body: byId('pubBody').value.trim(),
       };
 
-      const res = await fetch(/studio/api/save-article, {
-        method: POST,
-        headers: { Content-Type: application/json, x-studio-token: t },
+      const res = await fetch('/studio/api/save-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
