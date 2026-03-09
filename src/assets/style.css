@@ -2048,3 +2048,17 @@ html[data-theme="psychedelic"] .footer-brand {
   0%,100% { text-shadow: 0 0 6px #39ffea66, 0 0 14px #ff3cf955; }
   50% { text-shadow: 0 0 12px #39ffea99, 0 0 24px #ff3cf988; }
 }
+
+
+html[data-theme="psychedelic"][data-trip="1"] body::before {
+  animation-duration: 5s;
+  filter: hue-rotate(80deg) saturate(1.9) contrast(1.2);
+}
+html[data-theme="psychedelic"][data-trip="1"] .card,
+html[data-theme="psychedelic"][data-trip="1"] .sidebox,
+html[data-theme="psychedelic"][data-trip="1"] .playerbar {
+  box-shadow: 0 0 0 1px #ff3cf977, 0 0 36px #00fff799, 0 0 82px #ff3cf966;
+}
+html[data-theme="psychedelic"][data-trip="1"] .ticker {
+  animation-duration: 8s !important;
+}
