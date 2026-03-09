@@ -31,6 +31,27 @@ function runBuild(cb) {
   exec('npm run build', { cwd: ROOT }, (err, stdout, stderr) => cb(err, stdout, stderr));
 }
 
+function parseArticleFile(fullPath) {
+  const txt = fs.readFileSync(fullPath, 'utf8');
+  const m = txt.match(/^---
+([\s\S]*?)
+---
+?([\s\S]*)$/);
+  if (!m) return { frontmatter: {}, body: txt };
+  const fmText = m[1];
+  const body = m[2] || '';
+  const fm = {};
+  for (const line of fmText.split(/?
+/)) {
+    const i = line.indexOf(':');
+    if (i === -1) continue;
+    const k = line.slice(0, i).trim();
+    const v = line.slice(i + 1).trim();
+    fm[k] = v;
+  }
+  return { frontmatter: fm, body };
+}
+
 function collectArticleTags() {
   const tags = new Set();
   const skip = new Set(['all','nav','post','posts','articles']);
@@ -251,6 +272,41 @@ app.get('/api/list-articles', requireToken, (_req, res) => {
   }
 });
 
+
+
+app.get('/api/get-article', requireToken, (req, res) => {
+  try {
+    const ref = String(req.query?.ref || '').trim();
+    if (!ref) return res.status(400).json({ ok: false, error: 'ref is required' });
+
+    const target = path.resolve(articlesRoot, ref);
+    const base = path.resolve(articlesRoot) + path.sep;
+    if (!target.startsWith(base)) return res.status(400).json({ ok: false, error: 'invalid ref' });
+    if (!fs.existsSync(target)) return res.status(404).json({ ok: false, error: 'article not found' });
+
+    const parsed = parseArticleFile(target);
+    const fm = parsed.frontmatter || {};
+    let tags = [];
+    const rawTags = String(fm.tags || '').trim();
+    if (rawTags.startsWith('[')) {
+      tags = rawTags.replace(/[\[\]]/g, '').split(',').map((t) => t.trim().replace(/^['"]|['"]$/g,'')).filter(Boolean);
+    }
+
+    return res.json({
+      ok: true,
+      ref,
+      title: String(fm.title || '').replace(/^"|"$/g,''),
+      date: String(fm.date || '').replace(/^"|"$/g,''),
+      description: String(fm.description || '').replace(/^"|"$/g,''),
+      image: String(fm.image || '').replace(/^"|"$/g,''),
+      tags,
+      body: parsed.body || ''
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.post('/api/delete-article', requireToken, (req, res) => {
   try {
     const ref = String(req.body?.ref || '').trim();
@@ -272,6 +328,53 @@ app.post('/api/delete-article', requireToken, (req, res) => {
     runBuild((err, _stdout, stderr) => {
       if (err) return res.status(500).json({ ok: false, error: 'Build failed after deleting article', details: stderr || String(err) });
       return res.json({ ok: true, deleted: ref, build: 'ok' });
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+
+
+app.post('/api/update-article', requireToken, (req, res) => {
+  try {
+    const ref = String(req.body?.ref || '').trim();
+    const title = String(req.body?.title || '').trim();
+    const date = String(req.body?.date || '').trim();
+    const description = String(req.body?.description || '').trim();
+    const body = String(req.body?.body || '').trim();
+    const image = String(req.body?.image || '').trim();
+    const rawTags = req.body?.tags;
+
+    if (!ref) return res.status(400).json({ ok: false, error: 'ref is required' });
+    if (!title || !date || !description || !body) return res.status(400).json({ ok: false, error: 'title/date/description/body required' });
+
+    const target = path.resolve(articlesRoot, ref);
+    const base = path.resolve(articlesRoot) + path.sep;
+    if (!target.startsWith(base)) return res.status(400).json({ ok: false, error: 'invalid ref' });
+    if (!fs.existsSync(target)) return res.status(404).json({ ok: false, error: 'article not found' });
+
+    const esc = (v) => String(v || '').replace(/"/g, '\\"');
+    const tags = new Set(['articles']);
+    if (Array.isArray(rawTags)) for (const t of rawTags) { const tg = slugify(String(t||'')); if (tg && tg!=='articles') tags.add(tg); }
+    else if (typeof rawTags === 'string') for (const t of rawTags.split(',')) { const tg = slugify(String(t||'')); if (tg && tg!=='articles') tags.add(tg); }
+
+    const lines = [
+      '---',
+      `title: "${esc(title)}"`,
+      `description: "${esc(description)}"`,
+      `date: ${date.slice(0,10)}`,
+      `tags: [${Array.from(tags).join(', ')}]`,
+      'layout: layout-article.njk',
+    ];
+    if (image) lines.push(`image: "${esc(image)}"`);
+    lines.push('---', '', body, '');
+    fs.writeFileSync(target, lines.join('
+'));
+
+    runBuild((err, _stdout, stderr) => {
+      if (err) return res.status(500).json({ ok: false, error: 'Build failed after updating article', details: stderr || String(err) });
+      return res.json({ ok: true, updated: ref, build: 'ok' });
     });
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message });

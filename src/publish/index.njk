@@ -41,6 +41,8 @@ permalink: /publish/index.html
 
   <div class="pill-row" style="margin-top:10px;">
     <button class="btn" id="pubArticle">Publish article</button>
+    <button class="btn" id="updateArticle" type="button">Update loaded article</button>
+    <input type="hidden" id="editRef" />
   </div>
 
   <div id="pubOut" class="meta" style="margin-top:10px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Ready.</div>
@@ -52,6 +54,7 @@ permalink: /publish/index.html
   <div class="pill-row">
     <select id="delArticleSelect" style="flex:1;min-width:260px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></select>
     <button class="btn" id="refreshArticles">Refresh list</button>
+    <button class="btn" id="loadArticleBtn">Load into editor</button>
     <button class="btn" id="deleteArticleBtn">Delete article</button>
   </div>
   <div id="delOut" class="meta" style="margin-top:10px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:38px;">Ready.</div>
@@ -211,6 +214,57 @@ permalink: /publish/index.html
     }
   });
 
+
+  byId('loadArticleBtn').addEventListener('click', async () => {
+    try {
+      const ref = byId('delArticleSelect').value;
+      if (!ref) throw new Error('Select an article first.');
+      const data = await api(`/studio/api/get-article?ref=${encodeURIComponent(ref)}`);
+      byId('editRef').value = data.ref || ref;
+      byId('pubTitle').value = data.title || '';
+      byId('pubDate').value = (data.date || '').slice(0,10);
+      byId('pubImage').value = data.image || '';
+      byId('pubDesc').value = data.description || '';
+      byId('pubBody').value = data.body || '';
+
+      const tags = Array.isArray(data.tags) ? data.tags.filter(t => t !== 'articles') : [];
+      const known = new Set(Array.from(document.querySelectorAll('input[name="pubTag"]')).map(cb => cb.value));
+      const knownSelected = tags.filter(t => known.has(t));
+      const custom = tags.filter(t => !known.has(t));
+      document.querySelectorAll('input[name="pubTag"]').forEach(cb => { cb.checked = knownSelected.includes(cb.value); });
+      byId('customTags').value = custom.join(', ');
+
+      out.textContent = `Loaded article: ${ref}`;
+    } catch (e) {
+      out.textContent = `Load error: ${e.message}`;
+    }
+  });
+
+  byId('updateArticle').addEventListener('click', async () => {
+    try {
+      const ref = byId('editRef').value || byId('delArticleSelect').value;
+      if (!ref) throw new Error('Load/select an article first.');
+      const payload = {
+        ref,
+        title: byId('pubTitle').value.trim(),
+        date: byId('pubDate').value.trim(),
+        image: byId('pubImage').value.trim(),
+        description: byId('pubDesc').value.trim(),
+        body: byId('pubBody').value.trim(),
+        tags: selectedTags(),
+      };
+      const data = await api('/studio/api/update-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      out.textContent = `Updated ✅ ${data.updated}`;
+      await loadArticleList();
+    } catch (e) {
+      out.textContent = `Update error: ${e.message}`;
+    }
+  });
+
   byId('deleteArticleBtn').addEventListener('click', async () => {
     try {
       const ref = byId('delArticleSelect').value;
@@ -230,6 +284,8 @@ permalink: /publish/index.html
       delOut.textContent = `Delete error: ${e.message}`;
     }
   });
+
+  loadTags().catch(() => {});
 
   loadArticleList().catch((e) => {
     if (delOut) delOut.textContent = `List load error: ${e.message}`;
