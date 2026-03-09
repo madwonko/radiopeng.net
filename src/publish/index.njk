@@ -9,7 +9,14 @@ permalink: /publish/index.html
   <p>Standalone article publishing page (outside /manage).</p>
 </section>
 
-<section class="card">
+<section class="card" style="margin-bottom:14px;">
+  <div class="pill-row">
+    <button class="btn" id="pubTabNew" type="button">New Article</button>
+    <button class="btn" id="pubTabManage" type="button">Edit / Delete</button>
+  </div>
+</section>
+
+<section class="card" id="newArticleCard">
   <label style="display:block;margin-bottom:10px;">
     <div class="meta" style="margin-bottom:4px;">Studio API Token</div>
     <input id="pubToken" type="password" style="width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" />
@@ -48,8 +55,8 @@ permalink: /publish/index.html
   <div id="pubOut" class="meta" style="margin-top:10px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Ready.</div>
 </section>
 
-<section class="card" style="margin-top:14px;">
-  <h2>Remove Article</h2>
+<section class="card" id="manageArticleCard" style="margin-top:14px;">
+  <h2>Edit / Remove Article</h2>
   <p class="meta">Select an article and remove it (will rebuild site).</p>
   <div class="pill-row">
     <select id="delArticleSelect" style="flex:1;min-width:260px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></select>
@@ -65,6 +72,19 @@ permalink: /publish/index.html
   const byId = (id) => document.getElementById(id);
   const out = byId('pubOut');
   const token = () => (byId('pubToken').value || '').trim();
+
+  const newCard = byId('newArticleCard');
+  const manageCard = byId('manageArticleCard');
+  const tabNew = byId('pubTabNew');
+  const tabManage = byId('pubTabManage');
+
+  function setTab(which) {
+    const isNew = which === 'new';
+    if (newCard) newCard.style.display = isNew ? '' : 'none';
+    if (manageCard) manageCard.style.display = isNew ? 'none' : '';
+    if (tabNew) tabNew.classList.toggle('active', isNew);
+    if (tabManage) tabManage.classList.toggle('active', !isNew);
+  }
 
   const d = new Date();
   byId('pubDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -284,6 +304,10 @@ permalink: /publish/index.html
       delOut.textContent = `Delete error: ${e.message}`;
     }
   });
+
+  tabNew?.addEventListener('click', () => setTab('new'));
+  tabManage?.addEventListener('click', () => setTab('manage'));
+  setTab('new');
 
   loadTags().catch(() => {});
 
