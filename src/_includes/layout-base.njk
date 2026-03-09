@@ -444,13 +444,14 @@
           '--bg':'#f4f6fb','--panel':'#ffffff','--panel2':'#eef2fa','--text':'#1e2535','--muted':'#52607a','--link':'#1d3f8c','--border':'#1f2d4d1f','--border2':'#1f2d4d14','--pill':'#1f2d4d12','--pill-hover':'#1f2d4d20'
         },
         psychedelic: {
-          '--bg':'#12001f','--panel':'#2a0a3f','--panel2':'#1f0733','--text':'#ffe9ff','--muted':'#f3bff6','--link':'#7efcff','--border':'#ff7be33d','--border2':'#7efcff2e','--pill':'#ff7be326','--pill-hover':'#7efcff38'
+          '--bg':'#090012','--panel':'#2b0044','--panel2':'#18002b','--text':'#fff4ff','--muted':'#ffb3f7','--link':'#39ffea','--border':'#ff3cf95c','--border2':'#39ffea52','--pill':'#ff3cf94a','--pill-hover':'#39ffea66'
         }
       };
 
       function applyTheme(name) {
         const theme = themes[name] || themes.default;
         Object.entries(theme).forEach(([k,v]) => document.documentElement.style.setProperty(k,v));
+        document.documentElement.setAttribute('data-theme', name);
       }
 
       function safeGet() {
