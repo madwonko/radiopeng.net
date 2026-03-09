@@ -1,58 +1,25 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ title }} | RadioPeng</title>
-  <link rel="stylesheet" href="/assets/style.css" />
-</head>
-<body>
-  <div class="container">
-    <header>
-      <div class="brand">
-        <div class="title">RadioPeng</div>
-        <div class="tagline">words that try to sound like music 🐧✍️</div>
-      </div>
-      <nav>
-        <a class="pill" href="/">Home</a>
-        <a class="pill" href="/articles/">Articles</a>
-      </nav>
-    </header>
+---
+layout: layout-base.njk
+---
 
-    <section class="hero">
-      <h1>{{ title }}</h1>
-      <p class="meta">{{ date | readableDate }}</p>
-    </section>
+<section class="hero">
+  <h1>{{ title }}</h1>
+  <p class="meta">{{ date | readableDate }}</p>
+  {% if description %}
+    <p style="margin-top:10px; max-width:72ch;">{{ description }}</p>
+  {% endif %}
+</section>
 
-    <article class="card" style="margin-top:18px; line-height:1.6;">
-      {{ content | safe }}
-    </article>
-  </div>
+{% if image %}
+  <section class="card" style="margin-top:18px; padding:0; overflow:hidden;">
+    <img src="{{ image }}" alt="{{ title }}" style="display:block; width:100%; height:auto;" />
+  </section>
+{% endif %}
 
-  <div class="playerbar">
-    <div class="player-inner">
-      <button class="btn" id="playBtn">Play</button>
+<article class="card" style="margin-top:18px; line-height:1.6;">
+  {{ content | safe }}
+</article>
 
-      <div class="now">
-        <div class="label">Now Playing</div>
-        <div class="value" id="npText">Loading…</div>
-
-        <div class="meta" style="margin-top:6px;">
-          <span class="badge">
-            <span class="dot" id="liveDot"></span>
-            <span id="liveStatus">Idle</span>
-          </span>
-          <span style="margin-left:10px;" id="listenerText">Listeners: –</span>
-        </div>
-      </div>
-
-      <div class="vol">
-        <span>Volume</span>
-        <input id="vol" type="range" min="0" max="1" step="0.01" value="0.85" />
-      </div>
-    </div>
-  </div>
-
-  <script src="/assets/player.js"></script>
-</body>
-</html>
+<section class="card" style="margin-top:14px;">
+  <a href="/articles/">← Back to articles</a>
+</section>
