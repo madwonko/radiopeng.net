@@ -110,7 +110,7 @@ permalink: /publish/index.html
     const sel = byId('delArticleSelect');
     if (!sel) return;
     sel.innerHTML = '';
-    const data = await api('/studio/api/list-articles');
+    const data = await api('/publish/api/list-articles');
     const items = Array.isArray(data.items) ? data.items : [];
     if (!items.length) {
       const o = document.createElement('option');
@@ -149,7 +149,7 @@ permalink: /publish/index.html
   }
 
   async function loadTags() {
-    const data = await api('/studio/api/list-tags');
+    const data = await api('/publish/api/list-tags');
     const tags = Array.isArray(data.tags) ? data.tags : [];
     renderTagPicker(tags);
     return tags;
@@ -166,7 +166,7 @@ permalink: /publish/index.html
     fd.append('name', nameHint || 'upload');
     fd.append('rebuild', 'true');
 
-    const res = await fetch('/studio/api/upload-image', {
+    const res = await fetch('/publish/api/upload-image', {
       method: 'POST',
       headers: { 'x-studio-token': t },
       body: fd
@@ -202,7 +202,7 @@ permalink: /publish/index.html
         tags: selectedTags(),
       };
 
-      const res = await fetch('/studio/api/save-article', {
+      const res = await fetch('/publish/api/save-article', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
         body: JSON.stringify(payload)
@@ -239,7 +239,7 @@ permalink: /publish/index.html
     try {
       const ref = byId('delArticleSelect').value;
       if (!ref) throw new Error('Select an article first.');
-      const data = await api(`/studio/api/get-article?ref=${encodeURIComponent(ref)}`);
+      const data = await api(`/publish/api/get-article?ref=${encodeURIComponent(ref)}`);
       byId('editRef').value = data.ref || ref;
       byId('pubTitle').value = data.title || '';
       byId('pubDate').value = (data.date || '').slice(0,10);
@@ -273,7 +273,7 @@ permalink: /publish/index.html
         body: byId('pubBody').value.trim(),
         tags: selectedTags(),
       };
-      const data = await api('/studio/api/update-article', {
+      const data = await api('/publish/api/update-article', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -292,7 +292,7 @@ permalink: /publish/index.html
       const ok = confirm(`Delete article: ${ref}?`);
       if (!ok) return;
 
-      const data = await api('/studio/api/delete-article', {
+      const data = await api('/publish/api/delete-article', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ref })
