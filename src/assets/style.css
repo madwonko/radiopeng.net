@@ -2062,3 +2062,53 @@ html[data-theme="psychedelic"][data-trip="1"] .playerbar {
 html[data-theme="psychedelic"][data-trip="1"] .ticker {
   animation-duration: 8s !important;
 }
+
+/* Strong per-theme visual overrides so non-psychedelic themes are clearly distinct */
+html[data-theme="default"] body {
+  background:
+    radial-gradient(1200px 800px at 20% -10%, #ffffff0f, transparent 60%),
+    radial-gradient(1000px 700px at 90% 10%, #ffffff0a, transparent 55%),
+    var(--bg);
+}
+
+html[data-theme="midnight"] body {
+  background:
+    radial-gradient(900px 600px at 15% -5%, #6ca0ff22, transparent 55%),
+    radial-gradient(1000px 700px at 90% 0%, #8ac5ff1f, transparent 60%),
+    var(--bg);
+}
+
+html[data-theme="dawn"] body {
+  background:
+    radial-gradient(900px 600px at 15% -5%, #ff9f6b2b, transparent 55%),
+    radial-gradient(1000px 700px at 90% 0%, #ffd28f26, transparent 60%),
+    var(--bg);
+}
+
+html[data-theme="forest"] body {
+  background:
+    radial-gradient(900px 600px at 15% -5%, #5fe0a62b, transparent 55%),
+    radial-gradient(1000px 700px at 90% 0%, #7edcbf22, transparent 60%),
+    var(--bg);
+}
+
+html[data-theme="mono"] body {
+  background:
+    linear-gradient(180deg, #171717, #0f0f0f 40%, #0b0b0b),
+    var(--bg);
+}
+
+html[data-theme="light"] body {
+  background:
+    radial-gradient(900px 600px at 15% -5%, #c0d8ff55, transparent 55%),
+    radial-gradient(1000px 700px at 90% 0%, #dfe8ff70, transparent 60%),
+    var(--bg);
+  color: var(--text);
+}
+
+html[data-theme="light"] .card,
+html[data-theme="light"] .sidebox,
+html[data-theme="light"] .playerbar,
+html[data-theme="light"] .site-footer {
+  box-shadow: 0 6px 20px #20345a1a;
+}
