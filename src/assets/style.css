@@ -2007,3 +2007,7 @@ body.experimental-site .main a:not(.btn):not(.pill):not(.side-link) {
 .next-show-ribbon .ticker {
   animation-duration: 30s;
 }
+
+
+.theme-switcher{display:inline-flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--muted)}
+.theme-switcher select{background:var(--panel2);color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:4px 8px;font-size:12px}
