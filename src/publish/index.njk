@@ -16,6 +16,10 @@ permalink: /publish/index.html
   </div>
 </section>
 
+<section id="loadedBanner" class="card" style="display:none;margin-bottom:14px;">
+  <div class="meta"><strong>Loaded for editing:</strong> <span id="loadedRefText">—</span></div>
+</section>
+
 <section class="card" id="newArticleCard">
   <label style="display:block;margin-bottom:10px;">
     <div class="meta" style="margin-bottom:4px;">Studio API Token</div>
@@ -77,6 +81,8 @@ permalink: /publish/index.html
   const manageCard = byId('manageArticleCard');
   const tabNew = byId('pubTabNew');
   const tabManage = byId('pubTabManage');
+  const loadedBanner = byId('loadedBanner');
+  const loadedRefText = byId('loadedRefText');
 
   function setTab(which) {
     const isNew = which === 'new';
@@ -210,6 +216,9 @@ permalink: /publish/index.html
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || `Publish failed (${res.status})`);
 
+      byId('editRef').value = '';
+      if (loadedBanner) loadedBanner.style.display = 'none';
+      if (loadedRefText) loadedRefText.textContent = '—';
       out.textContent = `Published ✅ ${data.filename} → ${data.path}`;
     } catch (e) {
       out.textContent = `Publish error: ${e.message}`;
@@ -254,6 +263,9 @@ permalink: /publish/index.html
       document.querySelectorAll('input[name="pubTag"]').forEach(cb => { cb.checked = knownSelected.includes(cb.value); });
       byId('customTags').value = custom.join(', ');
 
+      if (loadedBanner) loadedBanner.style.display = '';
+      if (loadedRefText) loadedRefText.textContent = ref;
+      setTab('new');
       out.textContent = `Loaded article: ${ref}`;
     } catch (e) {
       out.textContent = `Load error: ${e.message}`;
@@ -278,6 +290,8 @@ permalink: /publish/index.html
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      if (loadedBanner) loadedBanner.style.display = '';
+      if (loadedRefText) loadedRefText.textContent = data.updated || ref;
       out.textContent = `Updated ✅ ${data.updated}`;
       await loadArticleList();
     } catch (e) {
