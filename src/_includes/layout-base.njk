@@ -129,7 +129,7 @@
           <span class="footer-tagline">Independent nocturnal transmissions, Broadcasting from somewhere between the West Coast and West End</span>
           <label class="theme-switcher" for="themeSelect">
             <span>Theme</span>
-            <select id="themeSelect" aria-label="Choose color theme">
+            <select id="themeSelect" aria-label="Choose color theme" onchange="window.__rpApplyTheme && window.__rpApplyTheme(this.value)">
               <option value="default">Default</option>
               <option value="midnight">Midnight</option>
               <option value="dawn">Dawn</option>
@@ -454,14 +454,22 @@
       };
 
       function applyTheme(name) {
-        const theme = themes[name] || themes.default;
-        Object.entries(theme).forEach(([k,v]) => document.documentElement.style.setProperty(k,v));
-        document.documentElement.setAttribute('data-theme', name);
+        const picked = themes[name] ? name : 'default';
+        const theme = themes[picked] || themes.default;
+
+        // clear previous inline theme vars to avoid sticky state
+        const rootStyle = document.documentElement.style;
+        ['--bg','--panel','--panel2','--text','--muted','--link','--border','--border2','--pill','--pill-hover'].forEach((k) => rootStyle.removeProperty(k));
+
+        Object.entries(theme).forEach(([k,v]) => rootStyle.setProperty(k,v));
+        document.documentElement.setAttribute('data-theme', picked);
 
         const tripWrap = document.getElementById('tripWrap');
-        if (tripWrap) tripWrap.style.display = name === 'psychedelic' ? 'inline-flex' : 'none';
-        if (name !== 'psychedelic') {
+        const trip = document.getElementById('tripToggle');
+        if (tripWrap) tripWrap.style.display = picked === 'psychedelic' ? 'inline-flex' : 'none';
+        if (picked !== 'psychedelic') {
           document.documentElement.removeAttribute('data-trip');
+          if (trip) trip.checked = false;
         }
       }
 
@@ -479,6 +487,7 @@
       }
 
       const select = document.getElementById('themeSelect');
+      window.__rpApplyTheme = applyTheme;
       const current = safeGet();
       applyTheme(current);
       if (select) {
