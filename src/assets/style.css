@@ -2027,3 +2027,24 @@ html[data-theme="psychedelic"] .playerbar {
   box-shadow: 0 0 0 1px #ff3cf944, 0 0 22px #00fff72b, 0 0 44px #ff3cf926;
 }
 html[data-theme="psychedelic"] a { text-shadow: 0 0 6px #39ffea66; }
+
+
+html[data-theme="psychedelic"] body::before {
+  animation: psychHue 14s linear infinite;
+}
+
+html[data-theme="psychedelic"] .site-logo,
+html[data-theme="psychedelic"] .footer-brand {
+  animation: psychPulse 3.5s ease-in-out infinite;
+}
+
+@keyframes psychHue {
+  0% { filter: hue-rotate(0deg) saturate(1.15); }
+  50% { filter: hue-rotate(28deg) saturate(1.35); }
+  100% { filter: hue-rotate(0deg) saturate(1.15); }
+}
+
+@keyframes psychPulse {
+  0%,100% { text-shadow: 0 0 6px #39ffea66, 0 0 14px #ff3cf955; }
+  50% { text-shadow: 0 0 12px #39ffea99, 0 0 24px #ff3cf988; }
+}
