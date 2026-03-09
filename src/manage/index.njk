@@ -119,7 +119,34 @@ permalink: /manage/index.html
   <div class="archive-control-grid" style="margin-top:10px;">
     <label><div class="meta">Show Slug</div><select id="slotShowSlug"></select></label>
     <label><div class="meta">Show Title Override (optional)</div><input id="slotShowTitle" type="text" placeholder="Wonko’s Odd Hours" /></label>
-    <label><div class="meta">Timezone</div><input id="scheduleTimezone" type="text" placeholder="America/New_York" /></label>
+    <label><div class="meta">Timezone</div>
+      <select id="scheduleTimezone">
+        <optgroup label="America">
+          <option value="America/New_York">America/New_York</option>
+          <option value="America/Chicago">America/Chicago</option>
+          <option value="America/Denver">America/Denver</option>
+          <option value="America/Los_Angeles">America/Los_Angeles</option>
+          <option value="America/Toronto">America/Toronto</option>
+          <option value="America/Mexico_City">America/Mexico_City</option>
+          <option value="America/Sao_Paulo">America/Sao_Paulo</option>
+          <option value="America/Argentina/Buenos_Aires">America/Argentina/Buenos_Aires</option>
+        </optgroup>
+        <optgroup label="Europe">
+          <option value="Europe/London">Europe/London</option>
+          <option value="Europe/Dublin">Europe/Dublin</option>
+          <option value="Europe/Paris">Europe/Paris</option>
+          <option value="Europe/Berlin">Europe/Berlin</option>
+          <option value="Europe/Madrid">Europe/Madrid</option>
+          <option value="Europe/Rome">Europe/Rome</option>
+          <option value="Europe/Amsterdam">Europe/Amsterdam</option>
+          <option value="Europe/Stockholm">Europe/Stockholm</option>
+          <option value="Europe/Warsaw">Europe/Warsaw</option>
+          <option value="Europe/Athens">Europe/Athens</option>
+          <option value="Europe/Kiev">Europe/Kiev</option>
+          <option value="Europe/Istanbul">Europe/Istanbul</option>
+        </optgroup>
+      </select>
+    </label>
     <label><div class="meta">Row Number</div><input id="slotIndex" type="text" readonly /></label>
   </div>
 
@@ -223,7 +250,17 @@ permalink: /manage/index.html
     scheduleData = await res.json();
     if (!Array.isArray(scheduleData.items)) scheduleData.items = [];
     if (!scheduleData.timezone) scheduleData.timezone = 'America/New_York';
-    byId('scheduleTimezone').value = scheduleData.timezone;
+    if (byId('scheduleTimezone')) {
+      const sel = byId('scheduleTimezone');
+      const wanted = scheduleData.timezone;
+      if (![...sel.options].some(o => o.value === wanted)) {
+        const opt = document.createElement('option');
+        opt.value = wanted;
+        opt.textContent = wanted + ' (custom)';
+        sel.appendChild(opt);
+      }
+      sel.value = wanted;
+    }
     renderScheduleSelect();
     renderShowSlugOptions();
   }
