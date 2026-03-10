@@ -33,16 +33,12 @@ function runBuild(cb) {
 
 function parseArticleFile(fullPath) {
   const txt = fs.readFileSync(fullPath, 'utf8');
-  const m = txt.match(/^---
-([\s\S]*?)
----
-?([\s\S]*)$/);
+  const m = txt.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!m) return { frontmatter: {}, body: txt };
   const fmText = m[1];
   const body = m[2] || '';
   const fm = {};
-  for (const line of fmText.split(/?
-/)) {
+  for (const line of fmText.split(/\r?\n/)) {
     const i = line.indexOf(':');
     if (i === -1) continue;
     const k = line.slice(0, i).trim();
@@ -369,8 +365,7 @@ app.post('/api/update-article', requireToken, (req, res) => {
     ];
     if (image) lines.push(`image: "${esc(image)}"`);
     lines.push('---', '', body, '');
-    fs.writeFileSync(target, lines.join('
-'));
+    fs.writeFileSync(target, lines.join('\n'));
 
     runBuild((err, _stdout, stderr) => {
       if (err) return res.status(500).json({ ok: false, error: 'Build failed after updating article', details: stderr || String(err) });
