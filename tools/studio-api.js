@@ -484,17 +484,10 @@ app.post('/public/likes/:slug/like', (req, res) => {
 
   const key = clientKey(req);
   const now = Date.now();
-  const cooldownMs = 12 * 60 * 60 * 1000;
 
   const likes = readJsonFile(likesPath, {});
   const votes = readJsonFile(likesVotesPath, {});
   const bySlug = votes[slug] || {};
-  const last = Number(bySlug[key] || 0);
-
-  if (last && (now - last) < cooldownMs) {
-    return res.json({ ok: true, slug, likes: Number(likes[slug] || 0), repeated: true });
-  }
-
   likes[slug] = Number(likes[slug] || 0) + 1;
   bySlug[key] = now;
   votes[slug] = bySlug;
