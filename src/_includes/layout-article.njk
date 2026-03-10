@@ -20,6 +20,41 @@ layout: layout-base.njk
   {{ content | safe }}
 </article>
 
+
+<section class="card" style="margin-top:14px;">
+  <div class="pill-row" style="align-items:center;gap:10px;">
+    <button class="btn" id="articleLikeBtn" type="button">❤ Like</button>
+    <span class="meta" id="articleLikeCount">Likes: —</span>
+  </div>
+</section>
+
+<script>
+(() => {
+  const btn = document.getElementById('articleLikeBtn');
+  const out = document.getElementById('articleLikeCount');
+  const m = /^\/articles\/([^/]+)\//.exec(window.location.pathname);
+  const slug = m ? m[1] : '';
+  if (!slug || !btn || !out) return;
+
+  async function getLikes() {
+    const res = await fetch(`/likes/api/${slug}`);
+    const data = await res.json();
+    if (data?.ok) out.textContent = `Likes: ${data.likes}`;
+  }
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    try {
+      const res = await fetch(`/likes/api/${slug}/like`, { method: 'POST' });
+      const data = await res.json();
+      if (data?.ok) out.textContent = `Likes: ${data.likes}`;
+    } catch (_) {}
+    btn.disabled = false;
+  });
+
+  getLikes().catch(() => {});
+})();
+</script>
 <section class="card" style="margin-top:14px;">
   <a href="/articles/">← Back to articles</a>
 </section>

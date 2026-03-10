@@ -16,6 +16,8 @@ const schedulePath = path.join(ROOT, 'src', '_data', 'schedule.json');
 const audioRoot = path.join(ROOT, 'src', 'audio');
 const uploadsRoot = path.join(ROOT, 'src', 'assets', 'uploads');
 const articlesRoot = path.join(ROOT, 'src', 'articles');
+const likesPath = path.join(ROOT, 'data', 'likes.json');
+const likesVotesPath = path.join(ROOT, 'data', 'likes-votes.json');
 
 function slugify(str) {
   return String(str || 'item')
@@ -80,6 +82,32 @@ function collectArticleTags() {
 
   if (fs.existsSync(articlesRoot)) walk(articlesRoot);
   return Array.from(tags).sort((a,b)=>a.localeCompare(b));
+}
+
+
+function readJsonFile(fp, fallback) {
+  try {
+    if (!fs.existsSync(fp)) return fallback;
+    return JSON.parse(fs.readFileSync(fp, 'utf8'));
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function writeJsonFile(fp, val) {
+  fs.mkdirSync(path.dirname(fp), { recursive: true });
+  fs.writeFileSync(fp, JSON.stringify(val, null, 2) + '\n');
+}
+
+function normalizeSlug(raw) {
+  const s = String(raw || '').trim().toLowerCase();
+  return s.replace(/[^a-z0-9-]/g, '').replace(/-{2,}/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function clientKey(req) {
+  const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();
+  const ua = String(req.headers['user-agent'] || '');
+  return `${ip}|${ua}`;
 }
 
 function requireToken(req, res, next) {
@@ -432,6 +460,42 @@ app.post('/api/save-article', requireToken, (req, res) => {
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
+});
+
+
+
+app.get('/public/likes/:slug', (req, res) => {
+  const slug = normalizeSlug(req.params.slug);
+  if (!slug) return res.status(400).json({ ok: false, error: 'invalid slug' });
+  const likes = readJsonFile(likesPath, {});
+  return res.json({ ok: true, slug, likes: Number(likes[slug] || 0) });
+});
+
+app.post('/public/likes/:slug/like', (req, res) => {
+  const slug = normalizeSlug(req.params.slug);
+  if (!slug) return res.status(400).json({ ok: false, error: 'invalid slug' });
+
+  const key = clientKey(req);
+  const now = Date.now();
+  const cooldownMs = 12 * 60 * 60 * 1000;
+
+  const likes = readJsonFile(likesPath, {});
+  const votes = readJsonFile(likesVotesPath, {});
+  const bySlug = votes[slug] || {};
+  const last = Number(bySlug[key] || 0);
+
+  if (last && (now - last) < cooldownMs) {
+    return res.json({ ok: true, slug, likes: Number(likes[slug] || 0), repeated: true });
+  }
+
+  likes[slug] = Number(likes[slug] || 0) + 1;
+  bySlug[key] = now;
+  votes[slug] = bySlug;
+
+  writeJsonFile(likesPath, likes);
+  writeJsonFile(likesVotesPath, votes);
+
+  return res.json({ ok: true, slug, likes: Number(likes[slug] || 0) });
 });
 
 app.listen(PORT, '127.0.0.1', () => {
