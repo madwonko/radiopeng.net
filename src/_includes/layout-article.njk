@@ -32,27 +32,40 @@ layout: layout-base.njk
 (() => {
   const btn = document.getElementById('articleLikeBtn');
   const out = document.getElementById('articleLikeCount');
-  const m = /^\/articles\/([^/]+)\//.exec(window.location.pathname);
+  const m = /^\/articles\/([^/]+)\/?(?:$|[?#])/.exec(window.location.pathname);
   const slug = m ? m[1] : '';
-  if (!slug || !btn || !out) return;
+  if (!btn || !out) return;
+  if (!slug) {
+    out.textContent = 'Likes: unavailable';
+    btn.disabled = true;
+    return;
+  }
 
   async function getLikes() {
     const res = await fetch(`/likes/api/${slug}`);
     const data = await res.json();
     if (data?.ok) out.textContent = `Likes: ${data.likes}`;
+    else out.textContent = 'Likes: error';
   }
 
   btn.addEventListener('click', async () => {
     btn.disabled = true;
+    const prev = out.textContent;
+    out.textContent = 'Likes: updating…';
     try {
       const res = await fetch(`/likes/api/${slug}/like`, { method: 'POST' });
       const data = await res.json();
       if (data?.ok) out.textContent = `Likes: ${data.likes}`;
-    } catch (_) {}
+      else out.textContent = prev;
+    } catch (_e) {
+      out.textContent = prev;
+    }
     btn.disabled = false;
   });
 
-  getLikes().catch(() => {});
+  getLikes().catch(() => {
+    out.textContent = 'Likes: error';
+  });
 })();
 </script>
 <section class="card" style="margin-top:14px;">
