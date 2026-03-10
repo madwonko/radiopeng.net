@@ -117,3 +117,20 @@ title: RadioPeng
   </div>
   <p class="meta" style="margin-top:10px;"><a href="/archive/">Browse full archive →</a></p>
 </section>
+
+
+<section class="card" style="margin-top:18px;">
+  <h2>Top Liked Articles</h2>
+  {% if topLiked and topLiked.length %}
+    <div class="article-list">
+      {% for a in topLiked %}
+        <a class="article" href="/articles/{{ a.slug }}/">
+          <div class="name">{{ a.title }}</div>
+          <div class="meta">❤ {{ a.likes }} like{% if a.likes != 1 %}s{% endif %}</div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="meta">No likes yet — be the first to like an article.</p>
+  {% endif %}
+</section>

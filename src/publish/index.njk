@@ -48,6 +48,7 @@ permalink: /publish/index.html
     <div id="tagPicker" class="pill-row" style="flex-wrap:wrap;gap:8px;"></div>
     <input id="customTags" type="text" placeholder="Optional custom tags (comma-separated)" style="margin-top:8px;width:100%;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;" />
   </label>
+  <label style="display:block;margin-top:10px;" class="meta"><input id="pubDraft" type="checkbox" /> Save as draft (not public)</label>
   <label style="display:block;margin-top:10px;"><div class="meta">Article body (Markdown)</div><textarea id="pubBody" style="width:100%;min-height:240px;background:#00000040;color:#fff;border:1px solid #ffffff2e;border-radius:10px;padding:10px;"></textarea></label>
 
   <div class="pill-row" style="margin-top:10px;">
@@ -206,6 +207,7 @@ permalink: /publish/index.html
         description: byId('pubDesc').value.trim(),
         body: byId('pubBody').value.trim(),
         tags: selectedTags(),
+        draft: !!byId('pubDraft')?.checked,
       };
 
       const res = await fetch('/publish/api/save-article', {
@@ -219,7 +221,7 @@ permalink: /publish/index.html
       byId('editRef').value = '';
       if (loadedBanner) loadedBanner.style.display = 'none';
       if (loadedRefText) loadedRefText.textContent = '—';
-      out.textContent = `Published ✅ ${data.filename} → ${data.path}`;
+      out.textContent = data.draft ? `Saved draft ✅ ${data.filename}` : `Published ✅ ${data.filename} → ${data.path}`;
     } catch (e) {
       out.textContent = `Publish error: ${e.message}`;
     }
@@ -284,6 +286,7 @@ permalink: /publish/index.html
         description: byId('pubDesc').value.trim(),
         body: byId('pubBody').value.trim(),
         tags: selectedTags(),
+        draft: !!byId('pubDraft')?.checked,
       };
       const data = await api('/publish/api/update-article', {
         method: 'POST',

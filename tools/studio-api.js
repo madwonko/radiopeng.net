@@ -16,6 +16,7 @@ const schedulePath = path.join(ROOT, 'src', '_data', 'schedule.json');
 const audioRoot = path.join(ROOT, 'src', 'audio');
 const uploadsRoot = path.join(ROOT, 'src', 'assets', 'uploads');
 const articlesRoot = path.join(ROOT, 'src', 'articles');
+const draftsRoot = path.join(ROOT, 'src', 'drafts');
 const likesPath = path.join(ROOT, 'data', 'likes.json');
 const likesVotesPath = path.join(ROOT, 'data', 'likes-votes.json');
 
@@ -370,6 +371,7 @@ app.post('/api/update-article', requireToken, (req, res) => {
     const body = String(req.body?.body || '').trim();
     const image = String(req.body?.image || '').trim();
     const rawTags = req.body?.tags;
+    const draft = !!req.body?.draft;
 
     if (!ref) return res.status(400).json({ ok: false, error: 'ref is required' });
     if (!title || !date || !description || !body) return res.status(400).json({ ok: false, error: 'title/date/description/body required' });
@@ -413,6 +415,7 @@ app.post('/api/save-article', requireToken, (req, res) => {
     const body = String(req.body?.body || '').trim();
     const image = String(req.body?.image || '').trim();
     const rawTags = req.body?.tags;
+    const draft = !!req.body?.draft;
 
     if (!title) return res.status(400).json({ ok: false, error: 'title is required' });
     if (!date) return res.status(400).json({ ok: false, error: 'date is required' });
@@ -451,12 +454,15 @@ app.post('/api/save-article', requireToken, (req, res) => {
     if (image) lines.push(`image: "${esc(image)}"`);
     lines.push('---', '', body, '');
 
-    const fullPath = path.join(articlesRoot, filename);
+    const targetRoot = draft ? draftsRoot : articlesRoot;
+    fs.mkdirSync(targetRoot, { recursive: true });
+    const fullPath = path.join(targetRoot, filename);
+    if (draft) { lines.splice(lines.indexOf('layout: layout-article.njk')+1, 0, 'draft: true', 'permalink: false'); }
     fs.writeFileSync(fullPath, lines.join('\n'));
 
     runBuild((err, _stdout, stderr) => {
       if (err) return res.status(500).json({ ok: false, error: 'Build failed after saving article', details: stderr || String(err) });
-      return res.json({ ok: true, filename, path: `/articles/${slug}/`, build: 'ok' });
+      return res.json({ ok: true, filename, path: draft ? `/drafts/${slug}/` : `/articles/${slug}/`, draft, build: 'ok' });
     });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
