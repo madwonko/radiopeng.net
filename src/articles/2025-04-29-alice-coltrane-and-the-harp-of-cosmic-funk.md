@@ -1,0 +1,16 @@
+---
+title: "Alice Coltrane and the Harp of Cosmic Funk"
+description: ""
+date: 2025-04-29
+tags: [articles, general, jazz]
+layout: layout-article.njk
+image: "https://radiopeng.org/wp-content/uploads/2025/04/Screenshot_9-4.jpg"
+---
+
+<p class="" data-start="159" data-end="577">Let’s be honest: if you met a woman who wore flowing robes, played jazz harp, ran an ashram, and claimed to receive music directly from the divine… you might assume she was either an interdimensional being or your coolest aunt on ayahuasca. But Alice Coltrane was both—and more. She didn’t just push jazz into new spiritual realms; she dragged it there in a chariot made of stars, incense smoke, and polyphonic wisdom.</p>
+<p class="" data-start="579" data-end="1048">Born in Detroit in 1937, Alice McLeod (before the Coltrane) was a pianist with gospel roots and fingers that could whisper or thunder depending on the weather in her soul. She studied classical music, dabbled in bebop, married John Coltrane (yes, <em data-start="826" data-end="832">that</em> John Coltrane), and then—after his death—rocketed straight out of jazz’s gravitational pull and into the astral plane, where she built a musical temple made of harp glissandos, Wurlitzer wobbles, and Vedic chanting.</p>
+<p class="" data-start="1050" data-end="1192">If Sun Ra was from Saturn, Alice was from the shimmering part of the sky you see behind your eyelids after deep meditation—or a very good nap.</p>
+<p class="" data-start="1194" data-end="1638">Her albums sound like sermons for aliens who love modal scales. <em data-start="1258" data-end="1284">Journey in Satchidananda</em> is the sonic equivalent of floating down the Ganges in a glitter canoe while someone sprinkles holy water on your chakras. Her harp playing doesn’t obey earthly laws—it swoops, it sparkles, it laughs in the face of logic. And when she switched to organ? Lord help us. It was like she duct-taped a cathedral to a spaceship and launched it toward nirvana.</p>
+<p class="" data-start="1640" data-end="2130">And yet, it was never about ego. While the jazz world was still busy arguing about whether avant-garde sax squawks counted as genius or jazz terrorism, Alice was feeding hungry families, running a spiritual center in California, and raising four kids. She didn’t perform much in her later years—not because she couldn’t, but because she was busy translating Sanskrit scriptures and communing with the Infinite. (Meanwhile, I have trouble answering emails and doing laundry on the same day.)</p>
+<p class="" data-start="2132" data-end="2372">Alice Coltrane didn't just make music. She opened portals. She was the rare artist who could make you feel like your soul had elbows and was stretching for the first time. Her sound says: “You are infinite. Also, you might want to hydrate.”</p>
+<p class="" data-start="2374" data-end="2709">Today, her music is finally getting the praise it deserves—from crate-digging beatmakers to yogis, from high-art snobs to your cousin who just bought a singing bowl. And it’s about time. Because Alice Coltrane didn’t wait for permission. She brought the cosmos to earth and invited us to listen—gently, weirdly, and with an open heart.</p>
