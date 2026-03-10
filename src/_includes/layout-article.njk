@@ -44,16 +44,26 @@ layout: layout-base.njk
     return;
   }
 
+  const sessionKey = `rp-liked:${slug}`;
+  const hasLikedThisSession = () => {
+    try { return !!window.sessionStorage && sessionStorage.getItem(sessionKey) === '1'; }
+    catch (_) { return false; }
+  };
+  const markLikedThisSession = () => {
+    try { if (window.sessionStorage) sessionStorage.setItem(sessionKey, '1'); }
+    catch (_) {}
+  };
+
   async function getLikes() {
     const res = await fetch(`/likes/api/${slug}`);
     const data = await res.json();
-    if (data?.ok) {
-      out.textContent = `Likes: ${data.likes}`;
-      if (note) note.textContent = '';
-    } else {
-      out.textContent = 'Likes: error';
-      if (note) note.textContent = '';
-    }
+    if (data?.ok) out.textContent = `Likes: ${data.likes}`;
+    else out.textContent = 'Likes: error';
+  }
+
+  if (hasLikedThisSession()) {
+    btn.disabled = true;
+    if (note) note.textContent = 'You already liked this in this session.';
   }
 
   btn.addEventListener('click', async () => {
@@ -61,22 +71,25 @@ layout: layout-base.njk
     const prev = out.textContent;
     out.textContent = 'Likes: updating…';
     if (note) note.textContent = '';
+
     try {
       const res = await fetch(`/likes/api/${slug}/like`, { method: 'POST' });
       const data = await res.json();
       if (data?.ok) {
         out.textContent = `Likes: ${data.likes}`;
-        if (note) note.textContent = data.repeated ? 'Thanks — you already liked this recently.' : 'Thanks for the like!';
+        markLikedThisSession();
+        btn.disabled = true;
+        if (note) note.textContent = 'Thanks for the like!';
       } else {
         out.textContent = prev;
-      if (note) note.textContent = 'Could not submit like. Try again.';
-        if (note) note.textContent = '';
+        btn.disabled = false;
+        if (note) note.textContent = 'Could not submit like. Try again.';
       }
     } catch (_e) {
       out.textContent = prev;
+      btn.disabled = false;
       if (note) note.textContent = 'Could not submit like. Try again.';
     }
-    btn.disabled = false;
   });
 
   getLikes().catch(() => {
