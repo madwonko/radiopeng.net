@@ -143,6 +143,7 @@
             <span>Max trip</span>
             <input id="tripToggle" type="checkbox" />
           </label>
+          <button class="btn" id="themeReset" type="button" style="padding:4px 8px;font-size:12px;">Reset</button>
         </div>
 
         <nav class="footer-right" aria-label="Footer">
@@ -466,6 +467,7 @@
 
         const tripWrap = document.getElementById('tripWrap');
         const trip = document.getElementById('tripToggle');
+      const resetBtn = document.getElementById('themeReset');
         if (tripWrap) tripWrap.style.display = picked === 'psychedelic' ? 'inline-flex' : 'none';
         if (picked !== 'psychedelic') {
           document.documentElement.removeAttribute('data-trip');
@@ -499,6 +501,18 @@
       }
 
       const trip = document.getElementById('tripToggle');
+      const resetBtn = document.getElementById('themeReset');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          applyTheme('default');
+          safeSet('default');
+          document.documentElement.removeAttribute('data-trip');
+          if (trip) trip.checked = false;
+          safeSetTrip(false);
+          if (select) select.value = 'default';
+        });
+      }
+
       if (trip) {
         const on = safeGetTrip();
         trip.checked = on;

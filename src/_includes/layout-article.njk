@@ -68,6 +68,21 @@ layout: layout-base.njk
   });
 })();
 </script>
+
+
+{% if tags and tags.length %}
+<section class="card" style="margin-top:14px;">
+  <div class="meta">Filed under:</div>
+  <div class="pill-row" style="margin-top:8px;">
+    {% for t in tags %}
+      {% if t != 'articles' %}
+        <a class="pill" href="/tags/{{ t | url }}/">{{ t }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <section class="card" style="margin-top:14px;">
   <a href="/articles/">← Back to articles</a>
 </section>

@@ -31,6 +31,14 @@ permalink: /studio/index.html
   <div id="uploadOut" class="meta" style="margin-top:10px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:48px;">Ready.</div>
 </section>
 
+<section class="card" style="margin-top:14px;">
+  <h2>Studio Health</h2>
+  <div class="pill-row">
+    <button class="btn" id="apiHealthBtn" type="button">Check API health</button>
+  </div>
+  <div id="apiHealthOut" class="meta" style="margin-top:10px;white-space:pre-wrap;background:#00000030;border:1px solid #ffffff22;border-radius:10px;padding:10px;min-height:38px;">Ready.</div>
+</section>
+
 <script>
 (() => {
   const ids = (id) => document.getElementById(id);
@@ -48,6 +56,17 @@ permalink: /studio/index.html
   ids('saveToken')?.addEventListener('click', () => {
     localStorage.setItem('studioUploadToken', ids('studioToken').value || '');
     out.textContent = 'Token saved in this browser.';
+  });
+
+  ids('apiHealthBtn')?.addEventListener('click', async () => {
+    const out = ids('apiHealthOut');
+    try {
+      const res = await fetch('/studio/api/health');
+      const txt = await res.text();
+      out.textContent = `HTTP ${res.status}: ${txt}`;
+    } catch (e) {
+      out.textContent = `Health check error: ${e.message}`;
+    }
   });
 
   ids('uploadBtn')?.addEventListener('click', async () => {
