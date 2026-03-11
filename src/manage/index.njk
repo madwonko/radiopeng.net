@@ -493,9 +493,18 @@ permalink: /manage/index.html
       const nameHint = byId('djName').value || byId('djSlug').value || 'dj-photo';
       const url = await uploadImage(file, 'djs', nameHint);
       byId('djPhoto').value = url;
-      djOut.textContent = `Photo uploaded: ${url}`;
+
+      const slugNow = slugify(byId('djSlug').value || byId('djName').value);
+      if (!slugNow) {
+        djOut.textContent = ;
+        djOut.textContent += "\nNow click Save DJ to apply this photo.";
+        return;
+      }
+
+      byId('djSave').click();
+      djOut.textContent = ;
     } catch (e) {
-      djOut.textContent = `Upload error: ${e.message}`;
+      djOut.textContent = ;
     }
   });
 
