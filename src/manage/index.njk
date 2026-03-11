@@ -496,15 +496,15 @@ permalink: /manage/index.html
 
       const slugNow = slugify(byId('djSlug').value || byId('djName').value);
       if (!slugNow) {
-        djOut.textContent = ;
-        djOut.textContent += "\nNow click Save DJ to apply this photo.";
+        djOut.textContent = 'Photo uploaded: ' + url;
+        djOut.textContent += '\nNow click Save DJ to apply this photo.';
         return;
       }
 
       byId('djSave').click();
-      djOut.textContent = ;
+      djOut.textContent = 'Photo uploaded and DJ saved: ' + url;
     } catch (e) {
-      djOut.textContent = ;
+      djOut.textContent = 'Upload error: ' + e.message;
     }
   });
 
