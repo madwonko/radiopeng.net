@@ -370,7 +370,7 @@ permalink: /manage/index.html
     fd.append('name', nameHint || 'upload');
     fd.append('rebuild', 'true');
 
-    const res = await fetch('/studio/api/upload-image', {
+    const res = await fetch('/publish/api/upload-image', {
       method: 'POST',
       headers: { 'x-studio-token': t },
       body: fd
@@ -383,7 +383,7 @@ permalink: /manage/index.html
   async function saveShowsRemote() {
     const t = token();
     if (!t) throw new Error('Missing Studio API token.');
-    const res = await fetch('/studio/api/save-shows', {
+    const res = await fetch('/publish/api/save-shows', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
       body: JSON.stringify({ items: showsData.items })
@@ -397,7 +397,7 @@ permalink: /manage/index.html
     const t = token();
     if (!t) throw new Error('Missing Studio API token.');
     const payload = { timezone: byId('scheduleTimezone').value.trim() || 'America/New_York', items: scheduleData.items };
-    const res = await fetch('/studio/api/save-schedule', {
+    const res = await fetch('/publish/api/save-schedule', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
       body: JSON.stringify(payload)
@@ -410,7 +410,7 @@ permalink: /manage/index.html
   async function saveDjsRemote() {
     const t = token();
     if (!t) throw new Error('Missing Studio API token.');
-    const res = await fetch('/studio/api/save-djs', {
+    const res = await fetch('/publish/api/save-djs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
       body: JSON.stringify({ items: djsData.items })
@@ -432,7 +432,7 @@ permalink: /manage/index.html
       body: byId('articleBody').value.trim(),
     };
 
-    const res = await fetch('/studio/api/save-article', {
+    const res = await fetch('/publish/api/save-article', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-studio-token': t },
       body: JSON.stringify(payload)
